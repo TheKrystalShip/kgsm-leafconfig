@@ -55,7 +55,7 @@ internal sealed class MetadataScanner(
 
     private List<FrameworkNamespace> ReadFrameworkNamespaces() =>
         [.. assembly.GetCustomAttributesData()
-            .Where(a => a.AttributeType.Name == Names.Attributes.FrameworkNamespace)
+            .Where(a => Named(a, Names.Attributes.FrameworkNamespace))
             .Select(a => new FrameworkNamespace(Arg<string>(a, 0)!, Arg<string>(a, 1)!))];
 
     // ── Leaf-level ───────────────────────────────────────────────────────────
@@ -80,13 +80,13 @@ internal sealed class MetadataScanner(
 
     private List<GroupDef> ReadGroups() =>
         [.. assembly.GetCustomAttributesData()
-            .Where(a => a.AttributeType.Name == Names.Attributes.Group)
+            .Where(a => Named(a, Names.Attributes.Group))
             .Select(a => new GroupDef(Arg<string>(a, 0)!, Arg<string>(a, 1)!, Arg<int>(a, 2)))
             .OrderBy(g => g.Order)];
 
     private List<FloorSource> ReadFloorSources() =>
         [.. assembly.GetCustomAttributesData()
-            .Where(a => a.AttributeType.Name == Names.Attributes.FloorSource)
+            .Where(a => Named(a, Names.Attributes.FloorSource))
             .Select(a => new FloorSource(Arg<string>(a, 0)!, Arg<string>(a, 1)!))];
 
     private List<FieldDef> ReadFrameworkFields()
@@ -95,7 +95,7 @@ internal sealed class MetadataScanner(
         int order = 0;
 
         foreach (CustomAttributeData a in assembly.GetCustomAttributesData()
-                     .Where(a => a.AttributeType.Name == Names.Attributes.FrameworkField))
+                     .Where(a => Named(a, Names.Attributes.FrameworkField)))
         {
             string env = Arg<string>(a, 1)!;
             string? settingsKey = Named<string>(a, Names.Args.SettingsKey);
@@ -263,7 +263,28 @@ internal sealed class MetadataScanner(
     // ── Attribute plumbing ───────────────────────────────────────────────────
 
     private static CustomAttributeData? Attr(IEnumerable<CustomAttributeData> attrs, string name) =>
-        attrs.FirstOrDefault(a => a.AttributeType.Name == name);
+        attrs.FirstOrDefault(a => Named(a, name));
+
+    /// <summary>
+    /// Whether an attribute is the one being looked for, tolerating one whose type cannot be resolved.
+    /// </summary>
+    /// <remarks>
+    /// A leaf carries attributes from every library it uses, and reading a type name forces that type
+    /// to resolve. An attribute this tool never looks at, from an assembly that happens not to be
+    /// reachable, is not a reason to fail — and it cannot be a Leaf attribute, because those are
+    /// compiled into the leaf itself and always resolvable.
+    /// </remarks>
+    private static bool Named(CustomAttributeData attribute, string name)
+    {
+        try
+        {
+            return attribute.AttributeType.Name == name;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
 
     private static T? Arg<T>(CustomAttributeData a, int index) =>
         a.ConstructorArguments.Count > index ? (T?)a.ConstructorArguments[index].Value : default;

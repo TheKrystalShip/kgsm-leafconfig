@@ -77,12 +77,47 @@ internal static class LeafDescriptorFactory
         if (directory is null || !File.Exists(assemblyPath))
             throw new GenException($"the assembly is missing: {assemblyPath}. Build the leaf first.");
 
-        List<string> assemblies =
-        [
-            .. Directory.GetFiles(directory, "*.dll"),
-            .. Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll"),
-        ];
+        // First path wins, so the leaf's own output shadows the frameworks and one framework version
+        // shadows the rest. Feeding two copies of the same assembly to the resolver is fatal — several
+        // installed frameworks each carry an mscorlib, and the second one to load throws.
+        var assemblies = new Dictionary<string, string>(StringComparer.Ordinal);
 
-        return new MetadataLoadContext(new PathAssemblyResolver(assemblies));
+        foreach (string source in new[] { directory }.Concat(SharedFrameworks()))
+            foreach (string file in Directory.GetFiles(source, "*.dll"))
+                assemblies.TryAdd(Path.GetFileName(file), file);
+
+        return new MetadataLoadContext(new PathAssemblyResolver(assemblies.Values));
+    }
+
+    /// <summary>
+    /// Every shared framework installed beside the running one.
+    /// </summary>
+    /// <remarks>
+    /// A framework-dependent leaf references assemblies that are not in its output directory —
+    /// kgsm-api is an ASP.NET app, so Microsoft.AspNetCore.Mvc.Core lives in the shared framework and
+    /// nowhere near the binary. Resolving only the runtime directory leaves those unresolvable, and a
+    /// type this tool never looks at is enough to stop the scan.
+    /// </remarks>
+    private static IEnumerable<string> SharedFrameworks()
+    {
+        string runtime = RuntimeEnvironment.GetRuntimeDirectory();
+        yield return runtime;
+
+        // .../shared/Microsoft.NETCore.App/<version>/ -> .../shared/
+        DirectoryInfo? shared = Directory.GetParent(runtime.TrimEnd(Path.DirectorySeparatorChar))?.Parent;
+        if (shared is null || !shared.Exists)
+            yield break;
+
+        foreach (DirectoryInfo framework in shared.GetDirectories())
+        {
+            // Highest version wins; a leaf built against an older one still resolves, because metadata
+            // only needs the type to exist.
+            DirectoryInfo? newest = framework.GetDirectories()
+                .OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase)
+                .LastOrDefault();
+
+            if (newest is not null && !string.Equals(newest.FullName, runtime.TrimEnd(Path.DirectorySeparatorChar), StringComparison.Ordinal))
+                yield return newest.FullName;
+        }
     }
 }

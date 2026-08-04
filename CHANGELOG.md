@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0]
+
+### Fixed
+- **A framework-dependent leaf no longer crashes the scan.** kgsm-api is an ASP.NET app, so
+  `Microsoft.AspNetCore.Mvc.Core` lives in the shared framework and nowhere near its binary; resolving
+  only the runtime directory left it unresolvable, and reading the name of one attribute from it was
+  enough to abort. Every shared framework installed beside the running one is now on the resolver's
+  path, and an attribute whose type cannot be resolved is skipped rather than fatal — it cannot be a
+  Leaf attribute, since those are compiled into the leaf itself.
+
 ## [2.1.0]
 
 ### Added
