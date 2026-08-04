@@ -45,8 +45,10 @@ none of the descriptor's strings appear in the native binary.
 
 ## Using it
 
+Every .NET leaf in the ecosystem consumes it.
+
 ```xml
-<PackageReference Include="TheKrystalShip.KGSM.LeafConfig" Version="1.0.0" PrivateAssets="all" />
+<PackageReference Include="TheKrystalShip.KGSM.LeafConfig" Version="2.2.0" PrivateAssets="all" />
 
 <PropertyGroup>
   <LeafSettingsFile>kgsm-monitor.settings.json</LeafSettingsFile>
@@ -82,13 +84,24 @@ A field described only by its `<summary>` still builds, and the build says which
 | `[LeafFloorSource]` | assembly | where the leaf's own config comes from, lowest precedence first |
 | `[LeafFrameworkField]` | assembly | a key the leaf honours with no settings property of its own |
 | `[LeafFrameworkNamespace]` | assembly | a key prefix that cannot be enumerated, and why |
+| `[LeafSectionAssembly]` | assembly | another assembly this leaf's settings sections live in |
 | `[LeafSection]` | class | the configuration section a settings type binds from |
 | `[LeafField]` | property | key, label, group, type, bounds, unit, risk, `pairedApiKey`, `dependsOn` |
 | `[LeafIgnore]` | property | bound, but not configuration |
 
-Collections and name-keyed maps are skipped automatically: one variable cannot express a collection,
-and systemd refuses a variable name containing a hyphen, so a map keyed by an instance name could
-never be delivered through the env file at all.
+Collections and name-keyed maps are skipped automatically, along with their keys: one variable cannot
+express a collection, and systemd refuses a variable name containing a hyphen, so a map keyed by an
+instance name could never be delivered through the env file at all.
+
+**A leaf whose settings types live in a library names that assembly**, rather than the generator
+scanning whatever sits beside the binary. Leaves here share libraries — kgsm-bot compiles against the
+assistant's projects — so a section annotated in one repo must not be able to appear in another's
+descriptor. A named assembly that is missing is an error, never a silent omission.
+
+**A section bound from a type another package owns** is declared with `[LeafFrameworkField]` instead.
+kgsm-bot and the assistant both bind `Ollama` and `LlmAgent`, and each describes those keys for its
+own audience — what the bot says when it runs out of tool steps is not what the assistant says — so
+the prose lives with the surface that shows it rather than on the shared type.
 
 ## Build
 
