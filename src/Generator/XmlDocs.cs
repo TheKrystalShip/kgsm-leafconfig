@@ -22,22 +22,29 @@ internal sealed partial class XmlDocs
 
     public bool Found { get; }
 
-    public XmlDocs(string? path)
+    /// <summary>
+    /// Loads every documentation file the leaf's assemblies produced. Member ids are fully qualified,
+    /// so several files merge into one lookup with nothing to collide.
+    /// </summary>
+    public XmlDocs(IEnumerable<string> paths)
     {
-        if (path is null || !File.Exists(path))
-            return;
-
-        Found = true;
-
-        XElement? root = XDocument.Load(path).Root?.Element(Names.Docs.MembersElement);
-        if (root is null)
-            return;
-
-        foreach (XElement member in root.Elements(Names.Docs.MemberElement))
+        foreach (string path in paths)
         {
-            string? name = member.Attribute(Names.Docs.NameAttribute)?.Value;
-            if (name is not null)
-                members[name] = member;
+            if (!File.Exists(path))
+                continue;
+
+            Found = true;
+
+            XElement? root = XDocument.Load(path).Root?.Element(Names.Docs.MembersElement);
+            if (root is null)
+                continue;
+
+            foreach (XElement member in root.Elements(Names.Docs.MemberElement))
+            {
+                string? name = member.Attribute(Names.Docs.NameAttribute)?.Value;
+                if (name is not null)
+                    members[name] = member;
+            }
         }
     }
 

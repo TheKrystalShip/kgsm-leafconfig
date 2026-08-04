@@ -19,4 +19,9 @@
     <Compile Include="../../../src/Attributes/*.cs" LinkBase="LeafConfig" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- A settings section defined a layer below the entry assembly. -->
+    <ProjectReference Include="../SampleLibrary/SampleLibrary.csproj" />
+  </ItemGroup>
+
 </Project>

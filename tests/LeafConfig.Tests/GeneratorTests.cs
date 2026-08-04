@@ -136,8 +136,21 @@ public class GeneratorTests
         // The panel's layout is readable straight off the settings type, and a framework field sorts
         // ahead of the bound properties in its group.
         Assert.Equal(
-            ["logLevel", "token", "hostId", "statusOnline", "port", "backend"],
+            ["logLevel", "token", "hostId", "statusOnline", "port", "backend", "retryAttempts"],
             Build().Descriptor.Fields.Select(f => f.Key));
+    }
+
+    [Fact]
+    public void A_section_defined_in_another_assembly_is_described()
+    {
+        // A leaf's configuration types do not have to live in its entry assembly. kgsm-bot and kgsm-api
+        // both bind sections from a layer below, and a descriptor that stopped at the entry assembly
+        // would silently omit them — every one a knob the Control Panel could not show.
+        FieldDef retry = Field("retryAttempts");
+
+        Assert.Equal("Retry__Attempts", retry.Env);
+        Assert.Equal("3", retry.Default);
+        Assert.Equal("How many times a failed call is retried before the leaf gives up on it.", retry.Description);
     }
 
     // ── Leaf-level ───────────────────────────────────────────────────────────

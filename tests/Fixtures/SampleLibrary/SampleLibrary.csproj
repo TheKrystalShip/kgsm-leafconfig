@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- A layered leaf compiles the attributes into each assembly that uses them; the generator matches
+         them by name, so two independent copies read as one vocabulary. -->
+    <Compile Include="../../../src/Attributes/*.cs" LinkBase="LeafConfig" />
+  </ItemGroup>
+
+</Project>

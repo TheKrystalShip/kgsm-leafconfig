@@ -8,6 +8,9 @@
       "Online": "online"
     }
   },
+  "Retry": {
+    "Attempts": 3
+  },
   "Logging": {
     "LogLevel": {
       "Default": "Information",

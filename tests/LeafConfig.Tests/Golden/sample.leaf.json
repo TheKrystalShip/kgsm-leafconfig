@@ -102,6 +102,17 @@
       ],
       "default": "Ufw",
       "risk": "safe"
+    },
+    {
+      "key": "retryAttempts",
+      "env": "Retry__Attempts",
+      "label": "Retry attempts",
+      "description": "How many times a failed call is retried before the leaf gives up on it.",
+      "group": "net",
+      "type": "int",
+      "default": "3",
+      "min": 0,
+      "risk": "safe"
     }
   ]
 }

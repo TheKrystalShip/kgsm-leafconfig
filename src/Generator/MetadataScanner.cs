@@ -14,7 +14,11 @@ namespace TheKrystalShip.KGSM.LeafConfig.Gen;
 /// <c>Min = IntervalMsFloor</c> resolves — the compiler has already folded the constant, so the
 /// descriptor and the parser's clamp can share one declaration.
 /// </remarks>
-internal sealed class MetadataScanner(Assembly assembly, XmlDocs docs, IReadOnlyDictionary<string, string?> settings)
+internal sealed class MetadataScanner(
+    Assembly assembly,
+    IReadOnlyList<Assembly> sectionAssemblies,
+    XmlDocs docs,
+    IReadOnlyDictionary<string, string?> settings)
 {
     private readonly List<string> warnings = [];
 
@@ -29,14 +33,19 @@ internal sealed class MetadataScanner(Assembly assembly, XmlDocs docs, IReadOnly
         var fields = new List<FieldDef>();
         fields.AddRange(ReadFrameworkFields());
 
+        // Leaf-level attributes come from the entry assembly; bound sections may live anywhere the leaf
+        // compiles against, so a layered leaf describes its surface the same way a flat one does.
         int order = fields.Count;
-        foreach (Type type in assembly.GetTypes())
+        foreach (Assembly source in sectionAssemblies)
         {
-            CustomAttributeData? section = Attr(type.GetCustomAttributesData(), Names.Attributes.Section);
-            if (section is null)
-                continue;
+            foreach (Type type in source.GetTypes())
+            {
+                CustomAttributeData? section = Attr(type.GetCustomAttributesData(), Names.Attributes.Section);
+                if (section is null)
+                    continue;
 
-            ReadSection(type, Arg<string>(section, 0)!, fields, ref order);
+                ReadSection(type, Arg<string>(section, 0)!, fields, ref order);
+            }
         }
 
         return new Descriptor(identity, floorSources, groups, Sort(fields, groups), ReadFrameworkNamespaces());
