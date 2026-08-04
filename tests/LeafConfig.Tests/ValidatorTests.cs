@@ -22,7 +22,8 @@ public class ValidatorTests
             floorSources ?? [new FloorSource("appsettings", "/opt/x/x.settings.json")],
             groups ?? [new GroupDef("general", "General", 1)],
             fields ?? [],
-            exempt ?? []);
+            exempt ?? [],
+            []);
 
         GenException ex = Assert.Throws<GenException>(
             () => Validator.Check(descriptor, settingsKeys ?? descriptor.Fields.Select(f => f.Env)));
@@ -90,9 +91,28 @@ public class ValidatorTests
             [new FloorSource("appsettings", "/opt/x/x.settings.json")],
             [new GroupDef("general", "General", 1)],
             [Field(env: "Logging__LogLevel__Default")],
-            [new FrameworkNamespace("Logging__", "open-ended")]);
+            [new FrameworkNamespace("Logging__", "open-ended")],
+            []);
 
         Validator.Check(descriptor, ["Logging__LogLevel__Microsoft.AspNetCore"]);
+    }
+
+    [Fact]
+    public void A_name_keyed_map_does_not_have_to_be_described()
+    {
+        // The scan skips a collection because no environment variable could deliver it — one variable
+        // cannot express a map, and systemd refuses a hyphen in a variable name. Its keys are still in
+        // the settings file, so coverage has to know they were skipped on purpose rather than demand a
+        // description for something undescribable.
+        var descriptor = new Descriptor(
+            Identity(),
+            [new FloorSource("appsettings", "/opt/x/x.settings.json")],
+            [new GroupDef("general", "General", 1)],
+            [Field()],
+            [],
+            ["X__Instances__"]);
+
+        Validator.Check(descriptor, ["X__K", "X__Instances__minecraft-homestead__ChannelId"]);
     }
 
     [Fact]

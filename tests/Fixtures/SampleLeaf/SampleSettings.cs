@@ -10,6 +10,9 @@ using TheKrystalShip.KGSM.LeafConfig;
     unit: "kgsm-sample.service",
     role: "A fixture leaf, used to pin the generator's output.")]
 
+// The Retry section lives in SampleLibrary, a layer below this assembly.
+[assembly: LeafSectionAssembly("SampleLibrary")]
+
 [assembly: LeafGroup("general", "General", 1)]
 [assembly: LeafGroup("net", "Networking", 2)]
 

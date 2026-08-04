@@ -21,6 +21,7 @@
     <!-- Built, not referenced: the tests read its compiled metadata from disk, which is exactly what
          the generator does to a real leaf. -->
     <ProjectReference Include="../Fixtures/SampleLeaf/SampleLeaf.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../Fixtures/BrokenLeaf/BrokenLeaf.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,6 +33,10 @@
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>SampleLeafSettings</_Parameter1>
       <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/SampleLeaf/kgsm-sample.settings.json</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>MissingSectionAssembly</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/BrokenLeaf/bin/$(Configuration)/net10.0/BrokenLeaf.dll</_Parameter2>
     </AssemblyAttribute>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>GoldenDirectory</_Parameter1>

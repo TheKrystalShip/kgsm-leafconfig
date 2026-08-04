@@ -12,6 +12,9 @@ internal static class Fixture
 
     public static string Settings => Metadata("SampleLeafSettings");
 
+    /// <summary>A leaf declaring a section assembly it does not ship.</summary>
+    public static string MissingSectionAssembly => Metadata("MissingSectionAssembly");
+
     public static string Golden(string name) => Path.Combine(Metadata("GoldenDirectory"), name);
 
     private static string Metadata(string key) =>

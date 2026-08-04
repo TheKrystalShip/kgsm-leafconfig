@@ -15,6 +15,7 @@ internal static class Names
         internal const string Group = "LeafGroupAttribute";
         internal const string FloorSource = "LeafFloorSourceAttribute";
         internal const string Section = "LeafSectionAttribute";
+        internal const string SectionAssembly = "LeafSectionAssemblyAttribute";
         internal const string Field = "LeafFieldAttribute";
         internal const string Ignore = "LeafIgnoreAttribute";
         internal const string FrameworkField = "LeafFrameworkFieldAttribute";
@@ -173,6 +174,9 @@ internal static class Names
 
         internal static readonly string[] All = [Restart, Reload];
     }
+
+    /// <summary>Assembly file extension, for resolving a declared section assembly beside the leaf.</summary>
+    internal const string AssemblyExtension = ".dll";
 
     /// <summary>The env-var path separator IConfiguration maps onto a section boundary.</summary>
     internal const string EnvSeparator = "__";

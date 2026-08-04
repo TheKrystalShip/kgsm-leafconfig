@@ -36,7 +36,9 @@
     <Error Condition="!Exists('$(LeafDescriptorGeneratorPath)')"
            Text="the leaf descriptor generator is missing from the package at $(LeafDescriptorGeneratorPath)." />
 
-    <Exec Command="dotnet &quot;$(LeafDescriptorGeneratorPath)&quot; --assembly &quot;@(IntermediateAssembly->'%(FullPath)')&quot; --settings &quot;$(LeafSettingsFile)&quot; --out &quot;$(LeafDescriptorFile)&quot;" />
+    <!-- $(TargetPath), not the intermediate assembly: a leaf whose settings types live in a library it
+         references only has those assemblies beside it in the output directory. -->
+    <Exec Command="dotnet &quot;$(LeafDescriptorGeneratorPath)&quot; --assembly &quot;$(TargetPath)&quot; --settings &quot;$(LeafSettingsFile)&quot; --out &quot;$(LeafDescriptorFile)&quot;" />
   </Target>
 
 </Project>

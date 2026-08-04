@@ -67,4 +67,11 @@ internal sealed record Descriptor(
     IReadOnlyList<FloorSource> FloorSources,
     IReadOnlyList<GroupDef> Groups,
     IReadOnlyList<FieldDef> Fields,
-    IReadOnlyList<FrameworkNamespace> FrameworkNamespaces);
+    IReadOnlyList<FrameworkNamespace> FrameworkNamespaces,
+
+    /// <summary>
+    /// Env-key prefixes of bound properties the scan skipped because no variable could deliver them —
+    /// a name-keyed map or a list. Their keys are in the settings file and will never be fields, so
+    /// coverage has to know about them or it would demand a description for something undescribable.
+    /// </summary>
+    IReadOnlyList<string> UndeliverablePrefixes);

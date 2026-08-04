@@ -141,16 +141,28 @@ public class GeneratorTests
     }
 
     [Fact]
-    public void A_section_defined_in_another_assembly_is_described()
+    public void A_section_in_a_declared_assembly_is_described()
     {
         // A leaf's configuration types do not have to live in its entry assembly. kgsm-bot and kgsm-api
         // both bind sections from a layer below, and a descriptor that stopped at the entry assembly
-        // would silently omit them — every one a knob the Control Panel could not show.
+        // would silently omit them — every one a knob the Control Panel could not show. The leaf names
+        // that assembly rather than the generator guessing, because leaves share libraries.
         FieldDef retry = Field("retryAttempts");
 
         Assert.Equal("Retry__Attempts", retry.Env);
         Assert.Equal("3", retry.Default);
         Assert.Equal("How many times a failed call is retried before the leaf gives up on it.", retry.Description);
+    }
+
+    [Fact]
+    public void A_declared_section_assembly_that_is_missing_is_an_error()
+    {
+        // Silently skipping it would drop every knob it declares — the failure this whole mechanism
+        // exists to make impossible, reintroduced by a typo.
+        GenException ex = Assert.Throws<GenException>(
+            () => LeafDescriptorFactory.Build(Fixture.MissingSectionAssembly, Fixture.Settings));
+
+        Assert.Contains("names an assembly that is not beside the leaf", ex.Message);
     }
 
     // ── Leaf-level ───────────────────────────────────────────────────────────

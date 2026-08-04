@@ -21,6 +21,7 @@ internal sealed class MetadataScanner(
     IReadOnlyDictionary<string, string?> settings)
 {
     private readonly List<string> warnings = [];
+    private readonly List<string> undeliverable = [];
 
     public IReadOnlyList<string> Warnings => warnings;
 
@@ -48,7 +49,8 @@ internal sealed class MetadataScanner(
             }
         }
 
-        return new Descriptor(identity, floorSources, groups, Sort(fields, groups), ReadFrameworkNamespaces());
+        return new Descriptor(
+            identity, floorSources, groups, Sort(fields, groups), ReadFrameworkNamespaces(), undeliverable);
     }
 
     private List<FrameworkNamespace> ReadFrameworkNamespaces() =>
@@ -97,6 +99,8 @@ internal sealed class MetadataScanner(
         {
             string env = Arg<string>(a, 1)!;
             string description = Named<string>(a, Names.Args.Description) ?? string.Empty;
+            int min = Named(a, Names.Args.Min, NoBound);
+            int max = Named(a, Names.Args.Max, NoBound);
 
             result.Add(new FieldDef
             {
@@ -109,9 +113,15 @@ internal sealed class MetadataScanner(
                 Values = NamedArray(a, Names.Args.Values),
                 // A framework key may or may not appear in the settings file. When it does the file is
                 // the honest source; when it does not, the attribute is the only thing that can say.
-                Default = settings.TryGetValue(env, out string? v) ? v : Named<string>(a, Names.Args.Default),
+                Default = Named<bool>(a, Names.Args.NoDefault) ? null
+                    : settings.TryGetValue(env, out string? v) ? v
+                    : Named<string>(a, Names.Args.Default),
+                Min = min == NoBound ? null : min,
+                Max = max == NoBound ? null : max,
                 Unit = Named<string>(a, Names.Args.Unit),
                 Risk = NamedEnum(a, Names.Args.Risk) ?? Names.Risks.Safe,
+                PairedApiKey = Named<string>(a, Names.Args.PairedApiKey),
+                DependsOn = Named<string>(a, Names.Args.DependsOn),
                 DescriptionFrom = description.Length > 0 ? DescriptionSource.Declared : DescriptionSource.Missing,
                 Order = order++,
             });
@@ -137,7 +147,10 @@ internal sealed class MetadataScanner(
             // file and stays off the panel. Skipping it here is what keeps that rule from depending on
             // anyone remembering it.
             if (IsCollection(prop.PropertyType))
+            {
+                undeliverable.Add($"{envPrefix}{Names.EnvSeparator}{prop.Name}{Names.EnvSeparator}");
                 continue;
+            }
 
             string env = $"{envPrefix}{Names.EnvSeparator}{prop.Name}";
             CustomAttributeData? field = Attr(attrs, Names.Attributes.Field);

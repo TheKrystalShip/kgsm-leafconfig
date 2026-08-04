@@ -20,7 +20,7 @@ internal static class LeafDescriptorFactory
         using MetadataLoadContext context = Open(assemblyPath);
 
         Assembly entry = context.LoadFromAssemblyPath(Path.GetFullPath(assemblyPath));
-        IReadOnlyList<Assembly> sectionAssemblies = [entry, .. Siblings(context, assemblyPath)];
+        IReadOnlyList<Assembly> sectionAssemblies = [entry, .. Declared(context, entry, assemblyPath)];
 
         var docs = new XmlDocs(sectionAssemblies.Select(a => Path.ChangeExtension(a.Location, Names.Docs.Extension)));
 
@@ -34,45 +34,33 @@ internal static class LeafDescriptorFactory
     }
 
     /// <summary>
-    /// The other assemblies beside the entry one that carry bound settings types.
+    /// The other assemblies this leaf declares its settings sections in.
     /// </summary>
     /// <remarks>
-    /// A leaf's configuration types do not have to live in its entry assembly — kgsm-bot binds
-    /// <c>Discord</c> and <c>KGSM</c> from an infrastructure library its Discord host consumes. Scanning
-    /// the whole output directory means a layered leaf describes its surface the same way a flat one
-    /// does. Only assemblies that actually declare a <c>[LeafSection]</c> take part, so a leaf's
-    /// third-party dependencies contribute nothing; ordering is by assembly name after the entry
-    /// assembly, so the emitted field order does not depend on how the directory happens to be read.
+    /// Named explicitly rather than discovered, because leaves share libraries: kgsm-bot compiles
+    /// against the assistant's projects, and scanning everything beside the binary would pull a section
+    /// annotated over there into the bot's descriptor — keys the bot's settings file never declares,
+    /// failing a build in a repo nobody touched. A missing one is an error rather than a silent
+    /// omission, since the whole point of naming it is that its knobs must appear.
     /// </remarks>
-    private static IEnumerable<Assembly> Siblings(MetadataLoadContext context, string entryPath)
+    private static IEnumerable<Assembly> Declared(MetadataLoadContext context, Assembly entry, string entryPath)
     {
-        string full = Path.GetFullPath(entryPath);
-        string directory = Path.GetDirectoryName(full)!;
+        string directory = Path.GetDirectoryName(Path.GetFullPath(entryPath))!;
 
-        foreach (string path in Directory.GetFiles(directory, "*.dll").OrderBy(p => p, StringComparer.Ordinal))
+        foreach (CustomAttributeData attribute in entry.GetCustomAttributesData()
+                     .Where(a => a.AttributeType.Name == Names.Attributes.SectionAssembly))
         {
-            if (string.Equals(Path.GetFullPath(path), full, StringComparison.Ordinal))
-                continue;
+            string name = (string)attribute.ConstructorArguments[0].Value!;
+            string path = Path.Combine(directory, name + Names.AssemblyExtension);
 
-            Assembly candidate;
-            try
-            {
-                candidate = context.LoadFromAssemblyPath(path);
-                // Native and resource-only files sit in the same directory and carry no types.
-                if (!candidate.GetTypes().Any(HasSection))
-                    continue;
-            }
-            catch (Exception)
-            {
-                continue;
-            }
+            if (!File.Exists(path))
+                throw new GenException(
+                    $"[assembly: LeafSectionAssembly(\"{name}\")] names an assembly that is not beside the " +
+                    $"leaf: {path}. Its sections would be missing from the descriptor.");
 
-            yield return candidate;
+            yield return context.LoadFromAssemblyPath(path);
         }
     }
-
-    private static bool HasSection(Type type) =>
-        type.GetCustomAttributesData().Any(a => a.AttributeType.Name == Names.Attributes.Section);
 
     /// <summary>
     /// Resolves the leaf's assembly and everything it references from its own output directory plus

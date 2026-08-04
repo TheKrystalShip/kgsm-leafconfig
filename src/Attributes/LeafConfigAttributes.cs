@@ -68,6 +68,24 @@ internal sealed class LeafFloorSourceAttribute(string kind, string path) : Attri
 }
 
 /// <summary>
+/// Names another assembly this leaf's settings sections live in — an infrastructure library, a
+/// configuration layer below the host that binds it.
+/// </summary>
+/// <remarks>
+/// Opt-in rather than "scan whatever is beside the binary", because leaves share libraries. kgsm-bot
+/// compiles against the assistant's projects, so a section annotated over there would otherwise
+/// appear in the bot's descriptor — describing keys the bot's settings file never declares, and
+/// breaking a build in a repo nobody touched. A leaf naming its own assemblies cannot be surprised
+/// by one it merely depends on.
+/// </remarks>
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+internal sealed class LeafSectionAssemblyAttribute(string name) : Attribute
+{
+    /// <summary>Simple assembly name, without the extension.</summary>
+    public string Name { get; } = name;
+}
+
+/// <summary>
 /// Marks a bound settings type and names the configuration section it binds from. Every
 /// <see cref="LeafFieldAttribute"/> property under it is addressed as <c>Section__Property</c>,
 /// which is exactly how <c>IConfiguration</c> maps an environment variable onto it — so a
@@ -198,10 +216,20 @@ internal sealed class LeafFrameworkNamespaceAttribute(string prefix, string reas
 }
 
 /// <summary>
-/// A configurable key the leaf honours without binding it to a settings property — the ecosystem
-/// logging level, a host-builder variable. It is declared explicitly, with its own default, because
-/// nothing in the leaf's own types can be read to discover it.
+/// A configurable key the leaf honours without a settings property of its own to hang an attribute
+/// on — the ecosystem logging level, a host-builder variable, or a section bound from a type another
+/// package owns.
 /// </summary>
+/// <remarks>
+/// That last case is why the prose is declared here rather than on the shared type: kgsm-bot and the
+/// assistant both bind <c>Ollama</c> and <c>LlmAgent</c>, and each describes those keys for its own
+/// surface — "what the bot says when it hits the step limit" is not what the assistant says. Prose
+/// written for one surface has to live with that surface.
+/// <para>
+/// Everything else about the field still holds: the key is immutable, the environment variable must
+/// be one the leaf genuinely reads, and the settings file remains the source of the default.
+/// </para>
+/// </remarks>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
 internal sealed class LeafFrameworkFieldAttribute(string key, string env, string label) : Attribute
 {
@@ -215,7 +243,32 @@ internal sealed class LeafFrameworkFieldAttribute(string key, string env, string
     public string? Group { get; set; }
     public LeafType Type { get; set; } = LeafType.String;
     public string[]? Values { get; set; }
+
+    /// <summary>
+    /// The coded default, for a key the settings file does not declare. When the file does declare it,
+    /// the file wins — it is the artifact the leaf actually loads.
+    /// </summary>
     public string? Default { get; set; }
+
+    /// <summary>Lower bound. See <see cref="LeafFieldAttribute.Min"/>.</summary>
+    public int Min { get; set; } = LeafFieldAttribute.NoBound;
+
+    /// <summary>Upper bound.</summary>
+    public int Max { get; set; } = LeafFieldAttribute.NoBound;
+
     public string? Unit { get; set; }
     public LeafRisk Risk { get; set; } = LeafRisk.Safe;
+
+    /// <summary>A kgsm-api config key that must move in lockstep with this one.</summary>
+    public string? PairedApiKey { get; set; }
+
+    /// <summary>Another field's key. This one has no effect unless that one is set.</summary>
+    public string? DependsOn { get; set; }
+
+    /// <summary>
+    /// Suppresses the derived default, for the same reason <see cref="LeafFieldAttribute.NoDefault"/>
+    /// does: a blank in the settings file that the leaf resolves to something else at runtime is not a
+    /// default of empty string, and publishing it as one would be a fabricated value.
+    /// </summary>
+    public bool NoDefault { get; set; }
 }

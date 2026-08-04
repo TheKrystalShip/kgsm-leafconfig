@@ -114,6 +114,7 @@ internal static class Validator
         List<string> undescribed = [.. settingsKeys
             .Where(k => !described.Contains(k))
             .Where(k => !descriptor.FrameworkNamespaces.Any(n => k.StartsWith(n.Prefix, StringComparison.Ordinal)))
+            .Where(k => !descriptor.UndeliverablePrefixes.Any(p => k.StartsWith(p, StringComparison.Ordinal)))
             .OrderBy(k => k, StringComparer.Ordinal)];
 
         foreach (string key in undescribed)
