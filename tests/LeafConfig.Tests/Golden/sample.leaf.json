@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "id": "sample",
+  "displayName": "Sample",
+  "unit": "kgsm-sample.service",
+  "role": "A fixture leaf, used to pin the generator's output.",
+  "onDemand": false,
+  "applyMode": "restart",
+  "floorSources": [
+    {
+      "kind": "appsettings",
+      "path": "/opt/kgsm-sample/kgsm-sample.settings.json"
+    },
+    {
+      "kind": "env-file",
+      "path": "/etc/kgsm-sample/kgsm-sample.env"
+    }
+  ],
+  "groups": [
+    {
+      "id": "general",
+      "label": "General",
+      "order": 1
+    },
+    {
+      "id": "net",
+      "label": "Networking",
+      "order": 2
+    }
+  ],
+  "fields": [
+    {
+      "key": "logLevel",
+      "env": "Logging__LogLevel__Default",
+      "label": "Log level",
+      "description": "Minimum severity this leaf logs.",
+      "group": "general",
+      "type": "enum",
+      "values": [
+        "Trace",
+        "Debug",
+        "Information",
+        "Warning",
+        "Error",
+        "Critical"
+      ],
+      "default": "Information",
+      "risk": "safe"
+    },
+    {
+      "key": "token",
+      "env": "Sample__Token",
+      "label": "API token",
+      "description": "Shared secret for the fixture's imaginary API. Written, never read back.",
+      "group": "general",
+      "type": "secret",
+      "default": "",
+      "risk": "safe"
+    },
+    {
+      "key": "hostId",
+      "env": "Sample__HostId",
+      "label": "Host id",
+      "description": "Identity this host reports under. Defaults to the machine's hostname.",
+      "group": "general",
+      "type": "string",
+      "risk": "wiring",
+      "pairedApiKey": "Api__HostId"
+    },
+    {
+      "key": "statusOnline",
+      "env": "Sample__Status__Online",
+      "label": "Online marker",
+      "description": "Marker shown beside a server that is running.",
+      "group": "general",
+      "type": "string",
+      "default": "online",
+      "risk": "safe"
+    },
+    {
+      "key": "port",
+      "env": "Sample__Port",
+      "label": "Port",
+      "description": "TCP port the sample leaf listens on.",
+      "group": "net",
+      "type": "int",
+      "default": "8080",
+      "min": 1,
+      "max": 65535,
+      "risk": "safe"
+    },
+    {
+      "key": "backend",
+      "env": "Sample__Backend",
+      "label": "Firewall backend",
+      "description": "Packet-filtering implementation this leaf drives. Changing it rewrites nothing that is already applied.",
+      "group": "net",
+      "type": "enum",
+      "values": [
+        "Ufw",
+        "NfTables"
+      ],
+      "default": "Ufw",
+      "risk": "safe"
+    }
+  ]
+}

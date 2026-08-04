@@ -1,0 +1,17 @@
+{
+  "Sample": {
+    "Port": 8080,
+    "Token": "",
+    "Backend": "Ufw",
+    "HostId": "",
+    "Status": {
+      "Online": "online"
+    }
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>SampleLeaf</RootNamespace>
+    <IsPackable>false</IsPackable>
+
+    <!-- The generator reads descriptions out of this. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The attribute source, included the way the package's props file includes it. Taken straight
+         from src/ rather than through the packed nupkg, so a test run exercises the current source
+         instead of whatever was last packed. -->
+    <Compile Include="../../../src/Attributes/*.cs" LinkBase="LeafConfig" />
+  </ItemGroup>
+
+</Project>

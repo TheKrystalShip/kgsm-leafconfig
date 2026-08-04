@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>TheKrystalShip.KGSM.LeafConfig.Gen</RootNamespace>
+    <AssemblyName>leafdescgen</AssemblyName>
+    <Version>1.0.0</Version>
+
+    <!-- Shipped inside the LeafConfig package's tools/ folder, not as a package of its own. -->
+    <IsPackable>false</IsPackable>
+
+    <!-- Always invoked as `dotnet leafdescgen.dll`, so the native apphost is dead weight. It is also
+         extensionless, which NuGet reads as a directory when packing, burying the real files a level
+         down. -->
+    <UseAppHost>false</UseAppHost>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reads a leaf assembly as *metadata only* — types are never loaded for execution, so the tool
+         cannot run leaf code, and it works against an assembly built for any runtime. This is what
+         lets a Native-AOT leaf be described without gaining a single reflection call of its own. -->
+    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="LeafConfig.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,79 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+
+    <PackageId>TheKrystalShip.KGSM.LeafConfig</PackageId>
+    <Authors>Heisenberg</Authors>
+    <Version>1.0.0</Version>
+    <Description>
+      Declares a KGSM leaf's Control Panel configuration surface on its typed settings class, and
+      generates the leaf config descriptor from it at build time. Build-only: the attributes are
+      compiled in as source and read back out of the assembly's metadata by a separate process, so a
+      leaf gains no runtime dependency and no reflection — a Native-AOT leaf stays AOT.
+    </Description>
+
+    <!--
+      A build-only package. It contributes source, an MSBuild target and a tool; it has no library of
+      its own to reference, and nothing it depends on may reach the consuming leaf's output.
+
+      SuppressDependenciesWhenPacking matters most: the generator needs
+      System.Reflection.MetadataLoadContext, and without this that would become a transitive runtime
+      dependency of every leaf — an assembly shipped into an AOT publish to support a tool that never
+      runs there.
+    -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Build-order only: the generator is packed from its publish output, not referenced. -->
+    <ProjectReference Include="../Generator/Generator.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The attribute definitions, shipped as source. build/src/ rather than the contentFiles
+         convention because the props file includes them with an explicit <Compile Include>, which
+         behaves the same for every consumer regardless of how the reference is scoped. -->
+    <None Include="../Attributes/*.cs" Pack="true" PackagePath="build/src/" />
+
+    <None Include="../../build/TheKrystalShip.KGSM.LeafConfig.props" Pack="true" PackagePath="build/" />
+    <None Include="../../build/TheKrystalShip.KGSM.LeafConfig.targets" Pack="true" PackagePath="build/" />
+
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <!--
+    Publish the generator and pack the result, so the package carries the tool and its dependencies
+    with no restore of its own on the consuming side. Framework-dependent: every host in this
+    ecosystem has the .NET SDK, which is what runs the leaf's build in the first place.
+
+    This hooks TargetsForTfmSpecificContentInPackage rather than running before GenerateNuspec,
+    because pack collects its file list in _GetPackageFiles — items added after that has run are
+    simply not in the package, silently.
+  -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>
+      $(TargetsForTfmSpecificContentInPackage);PackGeneratorTool
+    </TargetsForTfmSpecificContentInPackage>
+    <_GeneratorPublishDir>$(MSBuildProjectDirectory)/../Generator/bin/$(Configuration)/publish/</_GeneratorPublishDir>
+  </PropertyGroup>
+
+  <Target Name="PackGeneratorTool">
+    <MSBuild Projects="../Generator/Generator.csproj" Targets="Publish"
+             Properties="Configuration=$(Configuration);TargetFramework=net10.0;PublishDir=$(_GeneratorPublishDir)" />
+
+    <ItemGroup>
+      <_GeneratorFile Include="$(_GeneratorPublishDir)**/*" />
+      <TfmSpecificPackageFile Include="@(_GeneratorFile)"
+                              PackagePath="tools/net10.0/%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+
+    <Error Condition="'@(_GeneratorFile)' == ''"
+           Text="the generator published nothing into $(_GeneratorPublishDir); the package would ship without its tool." />
+  </Target>
+
+</Project>

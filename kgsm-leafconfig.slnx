@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Generator/Generator.csproj" />
+    <Project Path="src/Package/Package.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LeafConfig.Tests/LeafConfig.Tests.csproj" />
+  </Folder>
+</Solution>

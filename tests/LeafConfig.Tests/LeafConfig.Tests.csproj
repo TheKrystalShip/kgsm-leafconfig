@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>TheKrystalShip.KGSM.LeafConfig.Tests</RootNamespace>
+    <AssemblyName>LeafConfig.Tests</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Generator/Generator.csproj" />
+
+    <!-- Built, not referenced: the tests read its compiled metadata from disk, which is exactly what
+         the generator does to a real leaf. -->
+    <ProjectReference Include="../Fixtures/SampleLeaf/SampleLeaf.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The fixture's build output, passed in rather than guessed at from the test binary's location. -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>SampleLeafAssembly</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/SampleLeaf/bin/$(Configuration)/net10.0/SampleLeaf.dll</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>SampleLeafSettings</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/SampleLeaf/kgsm-sample.settings.json</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>GoldenDirectory</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)/Golden</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+</Project>
