@@ -250,6 +250,15 @@ internal sealed class LeafFrameworkFieldAttribute(string key, string env, string
     /// </summary>
     public string? Default { get; set; }
 
+    /// <summary>
+    /// The settings-file key this variable overrides, when the two are spelled differently. ASP.NET's
+    /// bind address is the case that needs it: the host reads <c>Urls</c> from configuration and
+    /// <c>ASPNETCORE_URLS</c> from the environment, and they are one setting reached two ways. The
+    /// variable is what an override file has to write; this is where the value comes from and what
+    /// coverage checks against.
+    /// </summary>
+    public string? SettingsKey { get; set; }
+
     /// <summary>Lower bound. See <see cref="LeafFieldAttribute.Min"/>.</summary>
     public int Min { get; set; } = LeafFieldAttribute.NoBound;
 

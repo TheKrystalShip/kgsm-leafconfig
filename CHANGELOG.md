@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0]
+
+### Added
+- **`[LeafFrameworkField(SettingsKey = "...")]`** for a setting whose override variable is spelled
+  differently from its configuration key. ASP.NET's bind address is the case: the host reads `Urls`
+  from configuration and `ASPNETCORE_URLS` from the environment, one setting reached two ways. The
+  variable is what an override file must write; the settings key is where the value comes from and
+  what coverage checks against.
+
+### Fixed
+- **A JSON array flattens to indexed keys**, the way `IConfiguration` addresses one, instead of being
+  read as a single opaque value. An **empty** array now declares no key at all — which is correct,
+  and load-bearing: an empty allow-list had been reported as an undescribed knob, so a leaf could not
+  ship one without failing its own build.
+
 ## [2.0.0]
 
 ### Changed — a leaf names its section assemblies instead of the generator guessing

@@ -98,6 +98,8 @@ internal sealed class MetadataScanner(
                      .Where(a => a.AttributeType.Name == Names.Attributes.FrameworkField))
         {
             string env = Arg<string>(a, 1)!;
+            string? settingsKey = Named<string>(a, Names.Args.SettingsKey);
+            string lookup = settingsKey ?? env;
             string description = Named<string>(a, Names.Args.Description) ?? string.Empty;
             int min = Named(a, Names.Args.Min, NoBound);
             int max = Named(a, Names.Args.Max, NoBound);
@@ -113,8 +115,9 @@ internal sealed class MetadataScanner(
                 Values = NamedArray(a, Names.Args.Values),
                 // A framework key may or may not appear in the settings file. When it does the file is
                 // the honest source; when it does not, the attribute is the only thing that can say.
+                SettingsKey = settingsKey,
                 Default = Named<bool>(a, Names.Args.NoDefault) ? null
-                    : settings.TryGetValue(env, out string? v) ? v
+                    : settings.TryGetValue(lookup, out string? v) ? v
                     : Named<string>(a, Names.Args.Default),
                 Min = min == NoBound ? null : min,
                 Max = max == NoBound ? null : max,

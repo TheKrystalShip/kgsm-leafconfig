@@ -41,6 +41,7 @@ internal static class Names
         internal const string NoDefault = "NoDefault";
         internal const string Description = "Description";
         internal const string Default = "Default";
+        internal const string SettingsKey = "SettingsKey";
     }
 
     /// <summary>The descriptor's `type` vocabulary (tks/leaf-config-descriptor.md §Types).</summary>

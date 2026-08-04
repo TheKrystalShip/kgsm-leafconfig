@@ -40,6 +40,24 @@ internal static class SettingsFile
                 continue;
             }
 
+            if (prop.Value.ValueKind == JsonValueKind.Array)
+            {
+                // IConfiguration addresses an array element by index, so that is what a variable would
+                // have to spell. An empty array declares no key at all — which is right: there is
+                // nothing there to override.
+                int index = 0;
+                foreach (JsonElement item in prop.Value.EnumerateArray())
+                {
+                    string element = key + Names.EnvSeparator + index++;
+                    if (item.ValueKind == JsonValueKind.Object)
+                        Walk(item, element, into);
+                    else
+                        into[element] = Scalar(item);
+                }
+
+                continue;
+            }
+
             into[key] = Scalar(prop.Value);
         }
     }

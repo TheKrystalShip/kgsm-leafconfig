@@ -57,6 +57,27 @@ public class SettingsFileTests
     }
 
     [Fact]
+    public void An_array_is_addressed_by_index()
+    {
+        // IConfiguration addresses an element by index, so that is what a variable would have to spell.
+        var flat = Flatten("""{ "S": { "Hosts": ["a", "b"] } }""");
+
+        Assert.Equal("a", flat["S__Hosts__0"]);
+        Assert.Equal("b", flat["S__Hosts__1"]);
+        Assert.False(flat.ContainsKey("S__Hosts"));
+    }
+
+    [Fact]
+    public void An_empty_array_declares_no_key()
+    {
+        // Right, and load-bearing: an empty allow-list is a declared property with nothing in it, so
+        // there is no key to override, and none to demand a description for.
+        var flat = Flatten("""{ "S": { "Hosts": [] } }""");
+
+        Assert.Empty(flat);
+    }
+
+    [Fact]
     public void Comments_and_trailing_commas_are_accepted()
     {
         // Microsoft.Extensions.Configuration's own JSON provider accepts both, and these files carry

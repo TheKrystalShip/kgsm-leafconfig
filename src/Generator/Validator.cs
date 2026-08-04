@@ -109,7 +109,8 @@ internal static class Validator
     /// </remarks>
     private static void CheckCoverage(Descriptor descriptor, IEnumerable<string> settingsKeys, List<string> faults)
     {
-        var described = descriptor.Fields.Select(f => f.Env).ToHashSet(StringComparer.Ordinal);
+        // A field may be reached by a variable spelled differently from its settings key.
+        var described = descriptor.Fields.Select(f => f.SettingsKey ?? f.Env).ToHashSet(StringComparer.Ordinal);
 
         List<string> undescribed = [.. settingsKeys
             .Where(k => !described.Contains(k))
@@ -127,11 +128,15 @@ internal static class Validator
         var declared = settingsKeys.ToHashSet(StringComparer.Ordinal);
 
         foreach (FieldDef field in descriptor.Fields)
-            if (!declared.Contains(field.Env) &&
-                !descriptor.FrameworkNamespaces.Any(n => field.Env.StartsWith(n.Prefix, StringComparison.Ordinal)))
+        {
+            string key = field.SettingsKey ?? field.Env;
+
+            if (!declared.Contains(key) &&
+                !descriptor.FrameworkNamespaces.Any(n => key.StartsWith(n.Prefix, StringComparison.Ordinal)))
                 faults.Add(
-                    $"{field.Key} describes '{field.Env}', which the settings file does not declare — an " +
+                    $"{field.Key} describes '{key}', which the settings file does not declare — an " +
                     $"override of it would bind to nothing");
+        }
     }
 
     private static void CheckEnum(FieldDef field, List<string> faults)

@@ -37,6 +37,12 @@ internal sealed record FieldDef
     public string? PairedApiKey { get; init; }
     public string? DependsOn { get; init; }
 
+    /// <summary>
+    /// The settings-file key this field's value comes from, when it is spelled differently from
+    /// <see cref="Env"/>. Coverage checks against this rather than the variable name.
+    /// </summary>
+    public string? SettingsKey { get; init; }
+
     /// <summary>Where the description came from, so the tool can report a fallback rather than hide it.</summary>
     public required DescriptionSource DescriptionFrom { get; init; }
 
