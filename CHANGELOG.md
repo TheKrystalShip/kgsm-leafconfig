@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed — package license metadata is GPL-3.0-or-later
+
+`PackageLicenseExpression` now matches the repo's own `LICENSE`, which it had never declared. Already
+published versions keep the metadata they were built with, since a published version is immutable —
+the correction reaches consumers on the next version bump.
+
 ## [2.2.0]
 
 ### Fixed
