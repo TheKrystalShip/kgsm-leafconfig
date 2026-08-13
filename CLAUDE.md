@@ -10,8 +10,8 @@ surface with, plus the build-time generator that writes `deploy/<leaf>.leaf.json
 `README.md` is the usage reference and the attribute vocabulary; read it first.
 
 This is **not a leaf**. It deploys nowhere, has no `deploy/` directory and no systemd unit. It is a
-build-time dependency of leaves, consumed as a versioned `PackageReference` from the local feed
-(`/home/heisen/local-nuget`) the same way `kgsm-lib` is.
+build-time dependency of leaves, consumed as a versioned `PackageReference` from the org's GitHub
+Packages feed the same way `kgsm-lib` is.
 
 **Authority for the descriptor *format* is `../leaf-config-descriptor.md`.** This repo implements a
 producer for it; when the two disagree, that document wins and this code is the bug.
@@ -21,7 +21,7 @@ producer for it; when the two disagree, that document wins and this code is the 
 ```bash
 dotnet build kgsm-leafconfig.slnx
 dotnet test kgsm-leafconfig.slnx
-dotnet pack src/Package/Package.csproj -c Release -o /home/heisen/local-nuget
+../scripts/publish-packages.sh kgsm-leafconfig     # pack + push to the org's feed
 ```
 
 A consumer resolves the package by `id+version` and NuGet caches on that pair, so **bump

@@ -140,7 +140,7 @@ from the environment, one setting reached two ways.
 ```bash
 dotnet build kgsm-leafconfig.slnx
 dotnet test kgsm-leafconfig.slnx                          # generator + validator + settings flattening
-dotnet pack src/Package/Package.csproj -c Release -o /home/heisen/local-nuget
+../scripts/publish-packages.sh kgsm-leafconfig     # pack + push to the org's feed
 ```
 
 The tests run the generator against `tests/Fixtures/SampleLeaf`, a real compiled leaf covering every
