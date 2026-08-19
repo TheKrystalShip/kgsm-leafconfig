@@ -59,7 +59,7 @@ descriptor's strings survive into a native binary.
 ## Using it
 
 ```xml
-<PackageReference Include="TheKrystalShip.KGSM.LeafConfig" Version="2.2.0" PrivateAssets="all" />
+<PackageReference Include="TheKrystalShip.KGSM.LeafConfig" Version="2.3.0-dev.1" PrivateAssets="all" />
 
 <PropertyGroup>
   <LeafSettingsFile>kgsm-monitor.settings.json</LeafSettingsFile>
@@ -101,6 +101,7 @@ and the build names each one, so neither stays invisible.
 | `[LeafGroup]` | assembly | a panel section and its order |
 | `[LeafFloorSource]` | assembly | where the leaf's own config comes from, lowest precedence first |
 | `[LeafSectionAssembly]` | assembly | another assembly this leaf's settings sections live in |
+| `[LeafGpuBackend]` | assembly | a systemd unit whose GPU usage is attributed to this leaf |
 | `[LeafFrameworkField]` | assembly | a key the leaf honours with no settings property of its own |
 | `[LeafFrameworkNamespace]` | assembly | a key prefix that cannot be enumerated, and why |
 | `[LeafSection]` | class | the configuration section a settings type binds from |
@@ -118,6 +119,18 @@ A key namespace that cannot be enumerated — per-category log filtering can spe
 there is — needs an explicit `[LeafFrameworkNamespace]` **with a reason**. It is a declaration in the
 leaf's source rather than a rule inside this tool, so an exemption has to be justified where someone
 will read it.
+
+### GPU spent through another unit
+
+`[LeafGpuBackend]` names a systemd unit whose GPU usage belongs to this leaf although the process is
+not the leaf's own — a model backend it drives over HTTP. It emits the descriptor's optional
+`gpuBackendUnits` array, and the key is absent for a leaf that declares none.
+
+Declaration exists here only for what discovery cannot see: a leaf's own GPU contexts fall out of its
+cgroup and need no attribute. The figures stay a block of their own carrying the unit they came from,
+so a surface says *"GPU via `kgsm-llama-chat.service`"* rather than folding a backend's memory into
+the leaf's own resource numbers. A unit that is masked or not running contributes nothing and is not
+a fault.
 
 ### Layered and shared configuration
 

@@ -14,6 +14,7 @@ internal static class Names
         internal const string Leaf = "LeafAttribute";
         internal const string Group = "LeafGroupAttribute";
         internal const string FloorSource = "LeafFloorSourceAttribute";
+        internal const string GpuBackend = "LeafGpuBackendAttribute";
         internal const string Section = "LeafSectionAttribute";
         internal const string SectionAssembly = "LeafSectionAssemblyAttribute";
         internal const string Field = "LeafFieldAttribute";
@@ -124,6 +125,7 @@ internal static class Names
         internal const string ReadOnly = "readOnly";
         internal const string ReadOnlyReason = "readOnlyReason";
         internal const string FloorSources = "floorSources";
+        internal const string GpuBackendUnits = "gpuBackendUnits";
         internal const string Kind = "kind";
         internal const string Path = "path";
         internal const string Groups = "groups";

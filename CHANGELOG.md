@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — `[LeafGpuBackend]`, for GPU spent through a unit the leaf does not own
+
+An assembly-level attribute naming a systemd unit whose GPU usage is attributed to the declaring
+leaf, emitted as the descriptor's optional `gpuBackendUnits` array. The assistant drives
+`llama-server` over HTTP and holds no GPU context of its own, so nothing in its cgroup can reveal
+where its GPU work is spent; a leaf whose own processes hold the context needs no attribute, since
+that falls out of the cgroup already.
+
+The key is omitted for a leaf that declares none — an empty array would read as a leaf that reaches a
+card and spends nothing on it. Repeating a unit fails the build, because its memory would be counted
+twice. A new optional leaf-level key is additive within `schemaVersion: 1`, so the version is
+unchanged and every existing reader ignores it.
+
 ### Changed — package license metadata is GPL-3.0-or-later
 
 `PackageLicenseExpression` now matches the repo's own `LICENSE`, which it had never declared. Already

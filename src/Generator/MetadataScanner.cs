@@ -50,7 +50,8 @@ internal sealed class MetadataScanner(
         }
 
         return new Descriptor(
-            identity, floorSources, groups, Sort(fields, groups), ReadFrameworkNamespaces(), undeliverable);
+            identity, ReadGpuBackendUnits(), floorSources, groups, Sort(fields, groups),
+            ReadFrameworkNamespaces(), undeliverable);
     }
 
     private List<FrameworkNamespace> ReadFrameworkNamespaces() =>
@@ -83,6 +84,11 @@ internal sealed class MetadataScanner(
             .Where(a => Named(a, Names.Attributes.Group))
             .Select(a => new GroupDef(Arg<string>(a, 0)!, Arg<string>(a, 1)!, Arg<int>(a, 2)))
             .OrderBy(g => g.Order)];
+
+    private List<string> ReadGpuBackendUnits() =>
+        [.. assembly.GetCustomAttributesData()
+            .Where(a => Named(a, Names.Attributes.GpuBackend))
+            .Select(a => Arg<string>(a, 0)!)];
 
     private List<FloorSource> ReadFloorSources() =>
         [.. assembly.GetCustomAttributesData()

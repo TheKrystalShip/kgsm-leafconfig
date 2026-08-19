@@ -6,6 +6,9 @@
   "role": "A fixture leaf, used to pin the generator's output.",
   "onDemand": false,
   "applyMode": "restart",
+  "gpuBackendUnits": [
+    "kgsm-sample-backend.service"
+  ],
   "floorSources": [
     {
       "kind": "appsettings",

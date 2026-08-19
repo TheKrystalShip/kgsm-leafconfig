@@ -30,6 +30,7 @@ internal static class Emitter
             writer.WriteStartObject();
 
             WriteIdentity(writer, descriptor.Identity);
+            WriteGpuBackendUnits(writer, descriptor.GpuBackendUnits);
             WriteFloorSources(writer, descriptor.FloorSources);
             WriteGroups(writer, descriptor.Groups);
             WriteFields(writer, descriptor.Fields);
@@ -58,6 +59,24 @@ internal static class Emitter
             writer.WriteBoolean(Names.Json.ReadOnly, true);
             WriteOptional(writer, Names.Json.ReadOnlyReason, identity.ReadOnlyReason);
         }
+    }
+
+    /// <summary>
+    /// Omitted when the leaf declares none, the same way <c>readOnly</c> is. An empty array would
+    /// read as a leaf that reaches a card and spends nothing on it, which is a measurement claim
+    /// this file has no business making.
+    /// </summary>
+    private static void WriteGpuBackendUnits(Utf8JsonWriter writer, IReadOnlyList<string> units)
+    {
+        if (units.Count == 0)
+            return;
+
+        writer.WriteStartArray(Names.Json.GpuBackendUnits);
+
+        foreach (string unit in units)
+            writer.WriteStringValue(unit);
+
+        writer.WriteEndArray();
     }
 
     private static void WriteFloorSources(Utf8JsonWriter writer, IReadOnlyList<FloorSource> sources)

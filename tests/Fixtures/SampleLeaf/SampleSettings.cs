@@ -16,6 +16,9 @@ using TheKrystalShip.KGSM.LeafConfig;
 [assembly: LeafGroup("general", "General", 1)]
 [assembly: LeafGroup("net", "Networking", 2)]
 
+// A backend the fixture drives without owning: its GPU is attributed here, labelled with the unit.
+[assembly: LeafGpuBackend("kgsm-sample-backend.service")]
+
 [assembly: LeafFloorSource("appsettings", "/opt/kgsm-sample/kgsm-sample.settings.json")]
 [assembly: LeafFloorSource("env-file", "/etc/kgsm-sample/kgsm-sample.env")]
 

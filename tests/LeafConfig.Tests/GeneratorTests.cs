@@ -179,6 +179,25 @@ public class GeneratorTests
     }
 
     [Fact]
+    public void A_declared_gpu_backend_unit_is_read_from_the_assembly()
+    {
+        // The leaf spends the card through a process it does not own, so nothing in its own cgroup
+        // could reveal this. Declaring it is what lets the monitor attribute the figure and still say
+        // which unit it came from.
+        Assert.Equal(["kgsm-sample-backend.service"], Build().Descriptor.GpuBackendUnits);
+    }
+
+    [Fact]
+    public void A_leaf_that_drives_no_backend_emits_no_gpu_key()
+    {
+        // Absent, not an empty array: an empty one reads as a leaf that reaches a card and spends
+        // nothing on it, which is a measurement this file never makes.
+        Descriptor descriptor = Build().Descriptor with { GpuBackendUnits = [] };
+
+        Assert.DoesNotContain("gpuBackendUnits", Emitter.Render(descriptor));
+    }
+
+    [Fact]
     public void An_open_ended_key_namespace_is_exempt_from_coverage()
     {
         // Logging__LogLevel__Microsoft.AspNetCore is in the settings file and described by nothing.

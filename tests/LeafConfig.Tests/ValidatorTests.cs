@@ -15,10 +15,12 @@ public class ValidatorTests
         IReadOnlyList<FloorSource>? floorSources = null,
         IReadOnlyList<FrameworkNamespace>? exempt = null,
         IEnumerable<string>? settingsKeys = null,
-        LeafIdentity? identity = null)
+        LeafIdentity? identity = null,
+        IReadOnlyList<string>? gpuBackendUnits = null)
     {
         var descriptor = new Descriptor(
             identity ?? Identity(),
+            gpuBackendUnits ?? [],
             floorSources ?? [new FloorSource("appsettings", "/opt/x/x.settings.json")],
             groups ?? [new GroupDef("general", "General", 1)],
             fields ?? [],
@@ -88,6 +90,7 @@ public class ValidatorTests
     {
         var descriptor = new Descriptor(
             Identity(),
+            [],
             [new FloorSource("appsettings", "/opt/x/x.settings.json")],
             [new GroupDef("general", "General", 1)],
             [Field(env: "Logging__LogLevel__Default")],
@@ -106,6 +109,7 @@ public class ValidatorTests
         // description for something undescribable.
         var descriptor = new Descriptor(
             Identity(),
+            [],
             [new FloorSource("appsettings", "/opt/x/x.settings.json")],
             [new GroupDef("general", "General", 1)],
             [Field()],
@@ -194,5 +198,21 @@ public class ValidatorTests
     public void An_unknown_applyMode_fails()
     {
         Assert.Contains("applyMode 'reboot' is not one of", Faults(identity: Identity(applyMode: "reboot")));
+    }
+
+    [Fact]
+    public void A_repeated_gpu_backend_unit_fails()
+    {
+        // The monitor sums the contexts each named unit holds, so a unit listed twice reports its
+        // memory twice — a figure that describes nothing on the card.
+        Assert.Contains(
+            "GPU backend unit 'kgsm-llama-chat.service' is declared more than once",
+            Faults(gpuBackendUnits: ["kgsm-llama-chat.service", "kgsm-llama-chat.service"]));
+    }
+
+    [Fact]
+    public void A_blank_gpu_backend_unit_fails()
+    {
+        Assert.Contains("a GPU backend unit is blank", Faults(gpuBackendUnits: [" "]));
     }
 }

@@ -68,6 +68,28 @@ internal sealed class LeafFloorSourceAttribute(string kind, string path) : Attri
 }
 
 /// <summary>
+/// A systemd unit whose GPU usage belongs to this leaf — a model backend the leaf drives without
+/// owning the process that spends the card.
+/// </summary>
+/// <remarks>
+/// Declared rather than discovered, because discovery cannot see it: a leaf's own GPU contexts fall
+/// out of its cgroup, and this covers the case where they do not exist. The figures the monitor
+/// attributes this way stay a separate block carrying the unit they came from, so a surface reads
+/// <i>"GPU via kgsm-llama-chat.service"</i> rather than folding a backend's memory into the leaf's
+/// own resource numbers.
+/// <para>
+/// A unit that is masked, absent or not running contributes nothing and is not a fault — the
+/// declaration says where this leaf's GPU work would be spent, not that it is being spent now.
+/// </para>
+/// </remarks>
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+internal sealed class LeafGpuBackendAttribute(string unit) : Attribute
+{
+    /// <summary>The systemd unit name, suffix included: <c>kgsm-llama-chat.service</c>.</summary>
+    public string Unit { get; } = unit;
+}
+
+/// <summary>
 /// Names another assembly this leaf's settings sections live in — an infrastructure library, a
 /// configuration layer below the host that binds it.
 /// </summary>

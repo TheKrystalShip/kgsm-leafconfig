@@ -15,6 +15,7 @@ internal static class Validator
         var faults = new List<string>();
 
         CheckIdentity(descriptor, faults);
+        CheckGpuBackendUnits(descriptor, faults);
         CheckFloorSources(descriptor, faults);
         CheckFields(descriptor, faults);
         CheckCoverage(descriptor, settingsKeys, faults);
@@ -40,6 +41,23 @@ internal static class Validator
         foreach (GroupDef group in descriptor.Groups)
             if (!groupIds.Add(group.Id))
                 faults.Add($"group '{group.Id}' is declared more than once");
+    }
+
+    /// <summary>
+    /// A backend unit is a name the monitor resolves a process against, so a blank one matches
+    /// nothing and a repeated one would count the same card memory twice.
+    /// </summary>
+    private static void CheckGpuBackendUnits(Descriptor descriptor, List<string> faults)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (string unit in descriptor.GpuBackendUnits)
+        {
+            if (string.IsNullOrWhiteSpace(unit))
+                faults.Add("a GPU backend unit is blank, and names no unit to attribute anything to");
+            else if (!seen.Add(unit))
+                faults.Add($"GPU backend unit '{unit}' is declared more than once, so its usage would be counted twice");
+        }
     }
 
     private static void CheckFloorSources(Descriptor descriptor, List<string> faults)

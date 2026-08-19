@@ -70,6 +70,13 @@ internal sealed record FrameworkNamespace(string Prefix, string Reason);
 
 internal sealed record Descriptor(
     LeafIdentity Identity,
+
+    /// <summary>
+    /// Systemd units whose GPU usage is attributed to this leaf. Empty for a leaf that drives no
+    /// backend, and the key is then absent from the file rather than written as an empty array —
+    /// absence is what every reader already treats as "this leaf reaches no card".
+    /// </summary>
+    IReadOnlyList<string> GpuBackendUnits,
     IReadOnlyList<FloorSource> FloorSources,
     IReadOnlyList<GroupDef> Groups,
     IReadOnlyList<FieldDef> Fields,
