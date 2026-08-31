@@ -1,4 +1,4 @@
-namespace TheKrystalShip.KGSM.LeafConfig.Gen;
+namespace TheKrystalShip.KGSM.ComponentConfig.Gen;
 
 /// <summary>
 /// The structural rules of the descriptor format, checked at the point the file is produced.
@@ -29,7 +29,7 @@ internal static class Validator
     // not the name it is generated under — deploy-common.sh owns that rename and checks it there.
     private static void CheckIdentity(Descriptor descriptor, List<string> faults)
     {
-        LeafIdentity identity = descriptor.Identity;
+        ComponentIdentity identity = descriptor.Identity;
 
         if (!Names.ApplyModes.All.Contains(identity.ApplyMode))
             faults.Add($"applyMode '{identity.ApplyMode}' is not one of: {string.Join(", ", Names.ApplyModes.All)}");

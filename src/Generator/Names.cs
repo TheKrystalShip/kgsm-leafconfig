@@ -1,4 +1,4 @@
-namespace TheKrystalShip.KGSM.LeafConfig.Gen;
+namespace TheKrystalShip.KGSM.ComponentConfig.Gen;
 
 /// <summary>
 /// Every name the tool matches on, in one place. The scanner reads metadata rather than loading the
@@ -12,21 +12,21 @@ internal static class Names
     internal static class Attributes
     {
         internal const string Leaf = "LeafAttribute";
-        internal const string Group = "LeafGroupAttribute";
-        internal const string FloorSource = "LeafFloorSourceAttribute";
-        internal const string GpuBackend = "LeafGpuBackendAttribute";
-        internal const string Section = "LeafSectionAttribute";
-        internal const string SectionAssembly = "LeafSectionAssemblyAttribute";
-        internal const string Field = "LeafFieldAttribute";
-        internal const string Ignore = "LeafIgnoreAttribute";
-        internal const string FrameworkField = "LeafFrameworkFieldAttribute";
-        internal const string FrameworkNamespace = "LeafFrameworkNamespaceAttribute";
+        internal const string Anchor = "AnchorAttribute";
+        internal const string Group = "ConfigGroupAttribute";
+        internal const string FloorSource = "ConfigFloorSourceAttribute";
+        internal const string GpuBackend = "ConfigGpuBackendAttribute";
+        internal const string Section = "ConfigSectionAttribute";
+        internal const string SectionAssembly = "ConfigSectionAssemblyAttribute";
+        internal const string Field = "ConfigFieldAttribute";
+        internal const string Ignore = "ConfigIgnoreAttribute";
+        internal const string FrameworkField = "ConfigFrameworkFieldAttribute";
+        internal const string FrameworkNamespace = "ConfigFrameworkNamespaceAttribute";
     }
 
-    /// <summary>Named attribute arguments. These match the property names in LeafConfigAttributes.cs.</summary>
+    /// <summary>Named attribute arguments. These match the property names in ComponentConfigAttributes.cs.</summary>
     internal static class Args
     {
-        internal const string Anchor = "Anchor";
         internal const string OnDemand = "OnDemand";
         internal const string ApplyMode = "ApplyMode";
         internal const string ReadOnly = "ReadOnly";
@@ -121,7 +121,6 @@ internal static class Names
         internal const string DisplayName = "displayName";
         internal const string Unit = "unit";
         internal const string Role = "role";
-        internal const string Anchor = "anchor";
         internal const string OnDemand = "onDemand";
         internal const string ApplyMode = "applyMode";
         internal const string ReadOnly = "readOnly";

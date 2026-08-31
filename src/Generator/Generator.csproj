@@ -5,14 +5,14 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>TheKrystalShip.KGSM.LeafConfig.Gen</RootNamespace>
-    <AssemblyName>leafdescgen</AssemblyName>
+    <RootNamespace>TheKrystalShip.KGSM.ComponentConfig.Gen</RootNamespace>
+    <AssemblyName>componentdescgen</AssemblyName>
     <Version>1.0.0</Version>
 
-    <!-- Shipped inside the LeafConfig package's tools/ folder, not as a package of its own. -->
+    <!-- Shipped inside the ComponentConfig package's tools/ folder, not as a package of its own. -->
     <IsPackable>false</IsPackable>
 
-    <!-- Always invoked as `dotnet leafdescgen.dll`, so the native apphost is dead weight. It is also
+    <!-- Always invoked as `dotnet componentdescgen.dll`, so the native apphost is dead weight. It is also
          extensionless, which NuGet reads as a directory when packing, burying the real files a level
          down. -->
     <UseAppHost>false</UseAppHost>
@@ -26,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="LeafConfig.Tests" />
+    <InternalsVisibleTo Include="ComponentConfig.Tests" />
   </ItemGroup>
 
 </Project>

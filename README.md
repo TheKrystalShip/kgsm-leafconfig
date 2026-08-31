@@ -1,15 +1,15 @@
-# kgsm-leafconfig
+# kgsm-componentconfig
 
-**`TheKrystalShip.KGSM.LeafConfig`** — a KGSM leaf declares its Control Panel configuration surface
+**`TheKrystalShip.KGSM.ComponentConfig`** — a KGSM leaf declares its Control Panel configuration surface
 on its typed settings class, and the leaf config descriptor is generated from it at build time.
 
 ```csharp
-[LeafSection("Monitor")]
+[ConfigSection("Monitor")]
 public sealed class MonitorSettings
 {
     /// <summary>Sampling cadence in milliseconds. Floor 100 — a lower value is raised to it.</summary>
     /// <panel>How often the monitor samples host and per-server metrics.</panel>
-    [LeafField("intervalMs", "Sample interval", Group = "sampling", Min = Floors.IntervalMs, Unit = "ms")]
+    [ConfigField("intervalMs", "Sample interval", Group = "sampling", Min = Floors.IntervalMs, Unit = "ms")]
     public int? IntervalMs { get; set; }
 }
 ```
@@ -59,17 +59,17 @@ descriptor's strings survive into a native binary.
 ## Using it
 
 ```xml
-<PackageReference Include="TheKrystalShip.KGSM.LeafConfig" Version="2.3.0-dev.1" PrivateAssets="all" />
+<PackageReference Include="TheKrystalShip.KGSM.ComponentConfig" Version="2.3.0-dev.1" PrivateAssets="all" />
 
 <PropertyGroup>
-  <LeafSettingsFile>kgsm-monitor.settings.json</LeafSettingsFile>
-  <LeafDescriptorFile>$(MSBuildProjectDirectory)/../../deploy/kgsm-monitor.leaf.json</LeafDescriptorFile>
+  <ComponentSettingsFile>kgsm-monitor.settings.json</ComponentSettingsFile>
+  <ComponentDescriptorFile>$(MSBuildProjectDirectory)/../../deploy/kgsm-monitor.leaf.json</ComponentDescriptorFile>
 </PropertyGroup>
 ```
 
 The package turns on `GenerateDocumentationFile` (that is how `<panel>` reaches the generator),
 includes the attribute source, and adds an `AfterTargets="Build"` step that rewrites the descriptor.
-`GenerateLeafDescriptor=false` uses the attributes without generating anything — which is what a
+`GenerateComponentDescriptor=false` uses the attributes without generating anything — which is what a
 settings *library* sets, leaving generation to the host that names it.
 
 **Edit the settings class, not the JSON** — the build overwrites it. Commit what the build produces.
@@ -83,7 +83,7 @@ last committed.
 The generator validates before it writes, so a descriptor that would misreport a leaf is never
 produced:
 
-- a settings key no `[LeafField]` describes, or a described key the settings file does not declare
+- a settings key no `[ConfigField]` describes, or a described key the settings file does not declare
 - a field with no description, an unknown `group` or `dependsOn`, a duplicate key
 - an enum with no values, or a default outside them; bounds on a non-numeric field
 - an unknown `type`, `risk` or `applyMode`; `readOnly` with no reason
@@ -97,16 +97,17 @@ and the build names each one, so neither stays invisible.
 
 | Attribute | Where | What it declares |
 |---|---|---|
-| `[Leaf]` | assembly | id, display name, unit, role, `anchor`, `onDemand`, `applyMode`, `readOnly` |
-| `[LeafGroup]` | assembly | a panel section and its order |
-| `[LeafFloorSource]` | assembly | where the leaf's own config comes from, lowest precedence first |
-| `[LeafSectionAssembly]` | assembly | another assembly this leaf's settings sections live in |
-| `[LeafGpuBackend]` | assembly | a systemd unit whose GPU usage is attributed to this leaf |
-| `[LeafFrameworkField]` | assembly | a key the leaf honours with no settings property of its own |
-| `[LeafFrameworkNamespace]` | assembly | a key prefix that cannot be enumerated, and why |
-| `[LeafSection]` | class | the configuration section a settings type binds from |
-| `[LeafField]` | property | key, label, group, type, bounds, unit, risk, `pairedApiKey`, `dependsOn` |
-| `[LeafIgnore]` | property | bound, but not configuration |
+| `[Leaf]` | assembly | id, display name, unit, role, `onDemand`, `applyMode`, `readOnly` — a component one NODE runs |
+| `[Anchor]` | assembly | the same keys — a component that serves one capability to the whole CLUSTER. Exactly one of the two; declaring both is refused |
+| `[ConfigGroup]` | assembly | a panel section and its order |
+| `[ConfigFloorSource]` | assembly | where the leaf's own config comes from, lowest precedence first |
+| `[ConfigSectionAssembly]` | assembly | another assembly this leaf's settings sections live in |
+| `[ConfigGpuBackend]` | assembly | a systemd unit whose GPU usage is attributed to this leaf |
+| `[ConfigFrameworkField]` | assembly | a key the leaf honours with no settings property of its own |
+| `[ConfigFrameworkNamespace]` | assembly | a key prefix that cannot be enumerated, and why |
+| `[ConfigSection]` | class | the configuration section a settings type binds from |
+| `[ConfigField]` | property | key, label, group, type, bounds, unit, risk, `pairedApiKey`, `dependsOn` |
+| `[ConfigIgnore]` | property | bound, but not configuration |
 
 ### What a descriptor cannot express
 
@@ -116,13 +117,13 @@ instance name could never be delivered through the env file at all. A leaf decla
 its settings file and it stays off the panel.
 
 A key namespace that cannot be enumerated — per-category log filtering can spell any category name
-there is — needs an explicit `[LeafFrameworkNamespace]` **with a reason**. It is a declaration in the
+there is — needs an explicit `[ConfigFrameworkNamespace]` **with a reason**. It is a declaration in the
 leaf's source rather than a rule inside this tool, so an exemption has to be justified where someone
 will read it.
 
 ### GPU spent through another unit
 
-`[LeafGpuBackend]` names a systemd unit whose GPU usage belongs to this leaf although the process is
+`[ConfigGpuBackend]` names a systemd unit whose GPU usage belongs to this leaf although the process is
 not the leaf's own — a model backend it drives over HTTP. It emits the descriptor's optional
 `gpuBackendUnits` array, and the key is absent for a leaf that declares none.
 
@@ -139,24 +140,24 @@ scanning whatever sits beside the binary. Leaves here share libraries — `kgsm-
 the assistant's projects — so a section annotated in one repo must not be able to appear in another's
 descriptor. A named assembly that is missing is an error, never a silent omission.
 
-**A section bound from a type another package owns** is declared with `[LeafFrameworkField]` instead.
+**A section bound from a type another package owns** is declared with `[ConfigFrameworkField]` instead.
 `kgsm-bot` and the assistant both bind `Ollama` and `LlmAgent`, and each describes those keys for its
 own audience — what the bot says when it runs out of tool steps is not what the assistant says — so
 the prose lives with the surface that shows it rather than on the shared type.
 
-`[LeafFrameworkField(SettingsKey = "…")]` covers a setting whose override variable is spelled
+`[ConfigFrameworkField(SettingsKey = "…")]` covers a setting whose override variable is spelled
 differently from its configuration key: ASP.NET reads `Urls` from configuration and `ASPNETCORE_URLS`
 from the environment, one setting reached two ways.
 
 ## Build
 
 ```bash
-dotnet build kgsm-leafconfig.slnx
-dotnet test kgsm-leafconfig.slnx                          # generator + validator + settings flattening
-../scripts/publish-packages.sh kgsm-leafconfig     # pack + push to the org's feed
+dotnet build kgsm-componentconfig.slnx
+dotnet test kgsm-componentconfig.slnx                          # generator + validator + settings flattening
+../scripts/publish-packages.sh kgsm-componentconfig     # pack + push to the org's feed
 ```
 
-The tests run the generator against `tests/Fixtures/SampleLeaf`, a real compiled leaf covering every
+The tests run the generator against `tests/Fixtures/SampleLeaf` and `tests/Fixtures/SampleAnchor`, real compiled components covering every
 shape the scanner handles — nested section, name-keyed map, C# enum, secret, suppressed default,
 ignored property, a section in a declared library — and pin the whole emitted document against a
 golden copy.
@@ -169,8 +170,8 @@ of the pin is that one engine describes every leaf.
 The tool can also be run directly, which is how a build failure is best read:
 
 ```bash
-dotnet leafdescgen.dll --assembly <leaf.dll> --settings <kgsm-leaf.settings.json> --out <leaf.json>
-dotnet leafdescgen.dll ... --check       # write nothing; fail if the file on disk is stale
+dotnet componentdescgen.dll --assembly <leaf.dll> --settings <kgsm-leaf.settings.json> --out <leaf.json>
+dotnet componentdescgen.dll ... --check       # write nothing; fail if the file on disk is stale
 ```
 
 ## License

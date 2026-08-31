@@ -1,4 +1,4 @@
-using TheKrystalShip.KGSM.LeafConfig;
+using TheKrystalShip.KGSM.ComponentConfig;
 
 // A leaf that exists only to be scanned. Every shape the generator has to handle appears here once:
 // a bounded number, a secret, a C# enum, a suppressed default, a nested section, a name-keyed map, an
@@ -11,24 +11,24 @@ using TheKrystalShip.KGSM.LeafConfig;
     role: "A fixture leaf, used to pin the generator's output.")]
 
 // The Retry section lives in SampleLibrary, a layer below this assembly.
-[assembly: LeafSectionAssembly("SampleLibrary")]
+[assembly: ConfigSectionAssembly("SampleLibrary")]
 
-[assembly: LeafGroup("general", "General", 1)]
-[assembly: LeafGroup("net", "Networking", 2)]
+[assembly: ConfigGroup("general", "General", 1)]
+[assembly: ConfigGroup("net", "Networking", 2)]
 
 // A backend the fixture drives without owning: its GPU is attributed here, labelled with the unit.
-[assembly: LeafGpuBackend("kgsm-sample-backend.service")]
+[assembly: ConfigGpuBackend("kgsm-sample-backend.service")]
 
-[assembly: LeafFloorSource("appsettings", "/opt/kgsm-sample/kgsm-sample.settings.json")]
-[assembly: LeafFloorSource("env-file", "/etc/kgsm-sample/kgsm-sample.env")]
+[assembly: ConfigFloorSource("appsettings", "/opt/kgsm-sample/kgsm-sample.settings.json")]
+[assembly: ConfigFloorSource("env-file", "/etc/kgsm-sample/kgsm-sample.env")]
 
-[assembly: LeafFrameworkNamespace("Logging__",
+[assembly: ConfigFrameworkNamespace("Logging__",
     "per-category filtering is open-ended: any category name is a valid key")]
 
-[assembly: LeafFrameworkField("logLevel", "Logging__LogLevel__Default", "Log level",
+[assembly: ConfigFrameworkField("logLevel", "Logging__LogLevel__Default", "Log level",
     Description = "Minimum severity this leaf logs.",
     Group = "general",
-    Type = LeafType.Enum,
+    Type = ConfigType.Enum,
     Values = ["Trace", "Debug", "Information", "Warning", "Error", "Critical"])]
 
 namespace SampleLeaf;
@@ -41,27 +41,27 @@ public enum FirewallBackend
 }
 
 /// <summary>The fixture leaf's bound configuration.</summary>
-[LeafSection("Sample")]
+[ConfigSection("Sample")]
 public sealed class SampleSettings
 {
     /// <summary>Listening port. Nullable so a blank value binds as unset rather than throwing.</summary>
     /// <panel>TCP port the sample leaf listens on.</panel>
-    [LeafField("port", "Port", Group = "net", Min = 1, Max = 65535)]
+    [ConfigField("port", "Port", Group = "net", Min = 1, Max = 65535)]
     public int? Port { get; set; }
 
     /// <summary>Shared secret for the fixture's imaginary API. Written, never read back.</summary>
-    [LeafField("token", "API token", Group = "general", Type = LeafType.Secret)]
+    [ConfigField("token", "API token", Group = "general", Type = ConfigType.Secret)]
     public string? Token { get; set; }
 
     /// <summary>Which backend to drive.</summary>
     /// <panel>Packet-filtering implementation this leaf drives. Changing it rewrites nothing that is
     /// already applied.</panel>
-    [LeafField("backend", "Firewall backend", Group = "net")]
+    [ConfigField("backend", "Firewall backend", Group = "net")]
     public FirewallBackend? Backend { get; set; }
 
     /// <summary>Identity this host reports under. Blank resolves to the machine name.</summary>
     /// <panel>Identity this host reports under. Defaults to the machine's hostname.</panel>
-    [LeafField("hostId", "Host id", Group = "general", Risk = LeafRisk.Wiring,
+    [ConfigField("hostId", "Host id", Group = "general", Risk = ConfigRisk.Wiring,
         PairedApiKey = "Api__HostId", NoDefault = true)]
     public string HostId { get; set; } = string.Empty;
 
@@ -73,7 +73,7 @@ public sealed class SampleSettings
     public Dictionary<string, string> Channels { get; set; } = [];
 
     /// <summary>Not configuration: a computed cache path the leaf owns.</summary>
-    [LeafIgnore]
+    [ConfigIgnore]
     public string CachePath { get; set; } = string.Empty;
 
     /// <summary>Bound, but described by nothing. The generator warns rather than inventing prose.</summary>
@@ -88,6 +88,6 @@ public sealed class StatusSettings
 {
     /// <summary>Marker shown for a running server.</summary>
     /// <panel>Marker shown beside a server that is running.</panel>
-    [LeafField("statusOnline", "Online marker", Group = "general")]
+    [ConfigField("statusOnline", "Online marker", Group = "general")]
     public string Online { get; set; } = "online";
 }

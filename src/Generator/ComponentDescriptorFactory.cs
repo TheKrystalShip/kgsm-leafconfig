@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace TheKrystalShip.KGSM.LeafConfig.Gen;
+namespace TheKrystalShip.KGSM.ComponentConfig.Gen;
 
 /// <summary>A built descriptor, plus anything the leaf ought to hear about while building it.</summary>
 internal sealed record BuildResult(
@@ -13,7 +13,7 @@ internal sealed record BuildResult(
 /// Builds a leaf's descriptor from its compiled assembly and its settings file — the whole pipeline
 /// in one call, so the command line and the tests take the same path through it.
 /// </summary>
-internal static class LeafDescriptorFactory
+internal static class ComponentDescriptorFactory
 {
     public static BuildResult Build(string assemblyPath, string settingsPath)
     {
@@ -55,7 +55,7 @@ internal static class LeafDescriptorFactory
 
             if (!File.Exists(path))
                 throw new GenException(
-                    $"[assembly: LeafSectionAssembly(\"{name}\")] names an assembly that is not beside the " +
+                    $"[assembly: ConfigSectionAssembly(\"{name}\")] names an assembly that is not beside the " +
                     $"leaf: {path}. Its sections would be missing from the descriptor.");
 
             yield return context.LoadFromAssemblyPath(path);

@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using System.Reflection;
 
-namespace TheKrystalShip.KGSM.LeafConfig.Gen;
+namespace TheKrystalShip.KGSM.ComponentConfig.Gen;
 
 /// <summary>
 /// Reads a leaf's descriptor out of its compiled metadata.
@@ -27,7 +27,7 @@ internal sealed class MetadataScanner(
 
     public Descriptor Scan()
     {
-        LeafIdentity identity = ReadIdentity();
+        ComponentIdentity identity = ReadIdentity();
         List<GroupDef> groups = ReadGroups();
         List<FloorSource> floorSources = ReadFloorSources();
 
@@ -61,23 +61,38 @@ internal sealed class MetadataScanner(
 
     // ── Leaf-level ───────────────────────────────────────────────────────────
 
-    private LeafIdentity ReadIdentity()
+    /// <summary>
+    /// The component's identity, from whichever of the two identity attributes it carries. Both hold
+    /// the same keys, so only the KIND differs — and a component is one thing, so declaring both is an
+    /// error rather than a precedence question nobody would remember the answer to.
+    /// </summary>
+    private ComponentIdentity ReadIdentity()
     {
-        CustomAttributeData leaf = Attr(assembly.GetCustomAttributesData(), Names.Attributes.Leaf)
-            ?? throw new GenException(
-                "the assembly carries no [assembly: Leaf(...)] attribute, so there is nothing to describe. " +
-                "Declare it once, next to the leaf's settings type.");
+        IList<CustomAttributeData> all = assembly.GetCustomAttributesData();
+        CustomAttributeData? leaf = Attr(all, Names.Attributes.Leaf);
+        CustomAttributeData? anchor = Attr(all, Names.Attributes.Anchor);
 
-        return new LeafIdentity(
-            Id: Arg<string>(leaf, 0)!,
-            DisplayName: Arg<string>(leaf, 1)!,
-            Unit: Arg<string>(leaf, 2)!,
-            Role: Arg<string>(leaf, 3)!,
-            Anchor: Named<bool>(leaf, Names.Args.Anchor),
-            OnDemand: Named<bool>(leaf, Names.Args.OnDemand),
-            ApplyMode: Named<string>(leaf, Names.Args.ApplyMode) ?? Names.ApplyModes.Restart,
-            ReadOnly: Named<bool>(leaf, Names.Args.ReadOnly),
-            ReadOnlyReason: Named<string>(leaf, Names.Args.ReadOnlyReason));
+        if (leaf is not null && anchor is not null)
+            throw new GenException(
+                "the assembly carries both [assembly: Leaf(...)] and [assembly: Anchor(...)], and it is " +
+                "one or the other. A leaf is run by one node and described on that node's disk; an anchor " +
+                "serves one capability to the whole cluster. Keep the one this component is.");
+
+        CustomAttributeData identity = leaf ?? anchor
+            ?? throw new GenException(
+                "the assembly carries neither [assembly: Leaf(...)] nor [assembly: Anchor(...)], so there " +
+                "is nothing to describe. Declare one, next to the component's settings type.");
+
+        return new ComponentIdentity(
+            Kind: leaf is not null ? ComponentKind.Leaf : ComponentKind.Anchor,
+            Id: Arg<string>(identity, 0)!,
+            DisplayName: Arg<string>(identity, 1)!,
+            Unit: Arg<string>(identity, 2)!,
+            Role: Arg<string>(identity, 3)!,
+            OnDemand: Named<bool>(identity, Names.Args.OnDemand),
+            ApplyMode: Named<string>(identity, Names.Args.ApplyMode) ?? Names.ApplyModes.Restart,
+            ReadOnly: Named<bool>(identity, Names.Args.ReadOnly),
+            ReadOnlyReason: Named<string>(identity, Names.Args.ReadOnlyReason));
     }
 
     private List<GroupDef> ReadGroups() =>
@@ -218,7 +233,7 @@ internal sealed class MetadataScanner(
 
     // ── Type mapping ─────────────────────────────────────────────────────────
 
-    /// <summary>Mirrors <c>LeafFieldAttribute.NoBound</c>: the value meaning "no bound declared".</summary>
+    /// <summary>Mirrors <c>ConfigFieldAttribute.NoBound</c>: the value meaning "no bound declared".</summary>
     private const int NoBound = int.MinValue;
 
     private static Type Unwrap(Type t) =>
@@ -234,7 +249,7 @@ internal sealed class MetadataScanner(
         Names.Clr.Double or Names.Clr.Single or Names.Clr.Decimal => Names.PanelTypes.Float,
         _ when t.IsEnum => Names.PanelTypes.Enum,
         _ => throw new GenException(
-            $"cannot derive a panel type for {t.FullName}. Say it explicitly with [LeafField(Type = ...)]."),
+            $"cannot derive a panel type for {t.FullName}. Say it explicitly with [ConfigField(Type = ...)]."),
     };
 
     private static IReadOnlyList<string>? EnumValues(Type t) =>

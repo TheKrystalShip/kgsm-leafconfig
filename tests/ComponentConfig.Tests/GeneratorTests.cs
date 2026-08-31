@@ -1,7 +1,9 @@
-using TheKrystalShip.KGSM.LeafConfig.Gen;
+using System.Text.Json;
+
+using TheKrystalShip.KGSM.ComponentConfig.Gen;
 using Xunit;
 
-namespace TheKrystalShip.KGSM.LeafConfig.Tests;
+namespace TheKrystalShip.KGSM.ComponentConfig.Tests;
 
 /// <summary>
 /// The generator against a real compiled leaf — the fixture in tests/Fixtures/SampleLeaf, read the
@@ -9,7 +11,7 @@ namespace TheKrystalShip.KGSM.LeafConfig.Tests;
 /// </summary>
 public class GeneratorTests
 {
-    private static BuildResult Build() => LeafDescriptorFactory.Build(Fixture.Assembly, Fixture.Settings);
+    private static BuildResult Build() => ComponentDescriptorFactory.Build(Fixture.Assembly, Fixture.Settings);
 
     private static FieldDef Field(string key) =>
         Build().Descriptor.Fields.Single(f => f.Key == key);
@@ -160,7 +162,7 @@ public class GeneratorTests
         // Silently skipping it would drop every knob it declares — the failure this whole mechanism
         // exists to make impossible, reintroduced by a typo.
         GenException ex = Assert.Throws<GenException>(
-            () => LeafDescriptorFactory.Build(Fixture.MissingSectionAssembly, Fixture.Settings));
+            () => ComponentDescriptorFactory.Build(Fixture.MissingSectionAssembly, Fixture.Settings));
 
         Assert.Contains("names an assembly that is not beside the leaf", ex.Message);
     }
@@ -170,7 +172,7 @@ public class GeneratorTests
     [Fact]
     public void The_leaf_identity_is_read_from_the_assembly()
     {
-        LeafIdentity identity = Build().Descriptor.Identity;
+        ComponentIdentity identity = Build().Descriptor.Identity;
 
         Assert.Equal("sample", identity.Id);
         Assert.Equal("kgsm-sample.service", identity.Unit);
@@ -187,18 +189,64 @@ public class GeneratorTests
         Assert.Equal(["kgsm-sample-backend.service"], Build().Descriptor.GpuBackendUnits);
     }
 
-    [Fact]
-    public void An_anchor_says_so_and_a_leaf_says_nothing()
-    {
-        // A cluster anchor serves one capability to the whole cluster and is a peer of the node it
-        // sits beside, so it belongs on no node's service board. The board reads this key to leave it
-        // off; absence is what a node's leaf looks like, and the sample fixture is one.
-        Descriptor leaf = Build().Descriptor;
-        Assert.False(leaf.Identity.Anchor);
-        Assert.DoesNotContain("\"anchor\"", Emitter.Render(leaf));
+    // ── Which kind of component this is ───────────────────────────────────────
 
-        Descriptor anchor = leaf with { Identity = leaf.Identity with { Anchor = true } };
-        Assert.Contains("\"anchor\": true", Emitter.Render(anchor));
+    [Fact]
+    public void An_anchor_is_described_by_the_same_body_a_leaf_is()
+    {
+        // The two identity attributes differ in nothing but which they are. An anchor's groups, floor
+        // sources and fields go through exactly the code a leaf's do, which is what makes one shared
+        // body honest rather than a coincidence that will drift.
+        Descriptor anchor = ComponentDescriptorFactory
+            .Build(Fixture.AnchorAssembly, Fixture.AnchorSettings).Descriptor;
+
+        Assert.Equal(ComponentKind.Anchor, anchor.Identity.Kind);
+        Assert.Equal("sample-anchor", anchor.Identity.Id);
+        Assert.Equal("kgsm-sample-anchor.service", anchor.Identity.Unit);
+        Assert.Contains(anchor.Fields, f => f.Key == "logLevel");
+        Assert.Contains(anchor.Groups, g => g.Id == "general");
+    }
+
+    [Fact]
+    public void The_file_records_no_kind_because_where_it_is_installed_says_which()
+    {
+        // A leaf is installed where the node that runs it is scanned; an anchor is not. The location
+        // is the fact, and a key repeating it is a second record of one thing that can disagree with
+        // the first. So the two files are the same shape, and the leaf's is byte-comparable to the
+        // anchor's wherever their content matches.
+        string leaf = Emitter.Render(Build().Descriptor);
+        string anchor = Emitter.Render(ComponentDescriptorFactory
+            .Build(Fixture.AnchorAssembly, Fixture.AnchorSettings).Descriptor);
+
+        // Read as JSON rather than searched as text: a floor source carries its own `kind`, and a
+        // substring check would find that one and call the file guilty of something it does not do.
+        foreach (string rendered in new[] { leaf, anchor })
+        {
+            JsonElement root = JsonDocument.Parse(rendered).RootElement;
+            foreach (string spelling in new[] { "kind", "anchor", "leaf", "component" })
+                Assert.False(root.TryGetProperty(spelling, out _), $"the descriptor states '{spelling}'");
+        }
+    }
+
+    [Fact]
+    public void A_component_that_claims_both_identities_is_refused()
+    {
+        // One or the other. Picking one by a precedence rule would put a component in the wrong
+        // directory on a deploy nobody re-read.
+        GenException ex = Assert.Throws<GenException>(
+            () => ComponentDescriptorFactory.Build(Fixture.ConfusedAssembly, Fixture.Settings));
+
+        Assert.Contains("one or the other", ex.Message);
+    }
+
+    [Fact]
+    public void A_component_that_claims_neither_is_refused()
+    {
+        // The generator is pointed at its own assembly, which carries no identity attribute at all.
+        GenException ex = Assert.Throws<GenException>(
+            () => ComponentDescriptorFactory.Build(typeof(Emitter).Assembly.Location, Fixture.Settings));
+
+        Assert.Contains("neither", ex.Message);
     }
 
     [Fact]

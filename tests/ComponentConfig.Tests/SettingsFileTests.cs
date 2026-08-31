@@ -1,7 +1,7 @@
-using TheKrystalShip.KGSM.LeafConfig.Gen;
+using TheKrystalShip.KGSM.ComponentConfig.Gen;
 using Xunit;
 
-namespace TheKrystalShip.KGSM.LeafConfig.Tests;
+namespace TheKrystalShip.KGSM.ComponentConfig.Tests;
 
 /// <summary>
 /// The settings file is where every field's default comes from, flattened the way

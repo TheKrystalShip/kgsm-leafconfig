@@ -1,4 +1,4 @@
-namespace TheKrystalShip.KGSM.LeafConfig.Gen;
+namespace TheKrystalShip.KGSM.ComponentConfig.Gen;
 
 /// <summary>
 /// Writes a leaf's config descriptor from the leaf's own compiled metadata.
@@ -24,10 +24,10 @@ internal static class Program
     private const int Ok = 0;
     private const int Failed = 1;
 
-    private const string Prefix = "leafdescgen: ";
+    private const string Prefix = "componentdescgen: ";
 
     private const string Usage = $"""
-        usage: leafdescgen {ArgAssembly} <leaf.dll> {ArgSettings} <kgsm-<leaf>.settings.json> {ArgOut} <leaf.json> [{ArgCheck}]
+        usage: componentdescgen {ArgAssembly} <leaf.dll> {ArgSettings} <kgsm-<leaf>.settings.json> {ArgOut} <leaf.json> [{ArgCheck}]
 
           {ArgAssembly}  the leaf's built assembly, read as metadata (never loaded for execution)
           {ArgSettings}  the leaf's settings file, which supplies each field's coded default
@@ -61,13 +61,36 @@ internal static class Program
             return Failed;
         }
 
-        BuildResult result = LeafDescriptorFactory.Build(assemblyPath, settingsPath);
+        BuildResult result = ComponentDescriptorFactory.Build(assemblyPath, settingsPath);
 
+        CheckDestination(result.Descriptor.Identity, outPath);
         Report(result);
 
         string rendered = Emitter.Render(result.Descriptor);
         return check ? Compare(outPath, rendered) : Write(outPath, rendered, result.Descriptor);
     }
+
+    /// <summary>
+    /// The file's name has to agree with what the component is, because the deploy routes on it: a
+    /// <c>.leaf.json</c> lands where the node that runs it is scanned, a <c>.anchor.json</c> does not.
+    /// Getting it wrong would put an anchor back on some node's service board, which is a deployment
+    /// error with no symptom until somebody reads the board and believes it.
+    /// </summary>
+    private static void CheckDestination(ComponentIdentity identity, string outPath)
+    {
+        string expected = identity.Kind == ComponentKind.Anchor ? AnchorSuffix : LeafSuffix;
+        if (outPath.EndsWith(expected, StringComparison.Ordinal))
+            return;
+
+        string declared = identity.Kind == ComponentKind.Anchor ? "[assembly: Anchor(...)]" : "[assembly: Leaf(...)]";
+        throw new GenException(
+            $"{identity.Id} declares {declared}, so its descriptor is written to a '{expected}' path — " +
+            $"'{Path.GetFileName(outPath)}' is not one. The suffix is what the deploy routes on, and a " +
+            "component in the wrong directory is read as the wrong kind of thing.");
+    }
+
+    private const string LeafSuffix = ".leaf.json";
+    private const string AnchorSuffix = ".anchor.json";
 
     private static void Report(BuildResult result)
     {

@@ -1,4 +1,4 @@
-using TheKrystalShip.KGSM.LeafConfig;
+using TheKrystalShip.KGSM.ComponentConfig;
 
 // A leaf that names a section assembly which is not there — a typo, or a project reference someone
 // removed. The generator has to refuse rather than quietly emit a descriptor missing those knobs.
@@ -9,5 +9,5 @@ using TheKrystalShip.KGSM.LeafConfig;
     unit: "kgsm-broken.service",
     role: "A fixture leaf that names a section assembly it does not ship.")]
 
-[assembly: LeafSectionAssembly("NotShipped")]
-[assembly: LeafFloorSource("appsettings", "/opt/kgsm-broken/kgsm-broken.settings.json")]
+[assembly: ConfigSectionAssembly("NotShipped")]
+[assembly: ConfigFloorSource("appsettings", "/opt/kgsm-broken/kgsm-broken.settings.json")]

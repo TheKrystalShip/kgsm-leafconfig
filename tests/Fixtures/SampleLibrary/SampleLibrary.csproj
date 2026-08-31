@@ -12,7 +12,7 @@
   <ItemGroup>
     <!-- A layered leaf compiles the attributes into each assembly that uses them; the generator matches
          them by name, so two independent copies read as one vocabulary. -->
-    <Compile Include="../../../src/Attributes/*.cs" LinkBase="LeafConfig" />
+    <Compile Include="../../../src/Attributes/*.cs" LinkBase="ComponentConfig" />
   </ItemGroup>
 
 </Project>

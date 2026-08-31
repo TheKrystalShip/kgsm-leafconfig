@@ -16,7 +16,7 @@
     <!-- The attribute source, included the way the package's props file includes it. Taken straight
          from src/ rather than through the packed nupkg, so a test run exercises the current source
          instead of whatever was last packed. -->
-    <Compile Include="../../../src/Attributes/*.cs" LinkBase="LeafConfig" />
+    <Compile Include="../../../src/Attributes/*.cs" LinkBase="ComponentConfig" />
   </ItemGroup>
 
   <ItemGroup>

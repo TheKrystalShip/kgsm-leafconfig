@@ -1,0 +1,48 @@
+<Project>
+
+  <!--
+    Regenerates a component's config descriptor from its own compiled metadata, on every build.
+
+    A component opts in with two properties:
+
+      <ComponentSettingsFile>kgsm-monitor.settings.json</ComponentSettingsFile>
+      <ComponentDescriptorFile>$(MSBuildProjectDirectory)/../../deploy/kgsm-monitor.leaf.json</ComponentDescriptorFile>
+
+    The descriptor's SUFFIX is what the deploy routes on — `.leaf.json` for a component one node runs,
+    `.anchor.json` for one that serves the whole cluster — and the generator refuses a suffix that
+    disagrees with the identity attribute the assembly carries.
+
+    There is no step to remember: a knob added to the settings type reaches the Control Panel as soon
+    as the component compiles, and a knob the settings file declares that nothing describes fails the
+    build naming the key.
+  -->
+
+  <PropertyGroup>
+    <ComponentDescriptorGeneratorPath>$(MSBuildThisFileDirectory)../tools/net10.0/componentdescgen.dll</ComponentDescriptorGeneratorPath>
+  </PropertyGroup>
+
+  <Target Name="_ValidateComponentDescriptorInputs" Condition="'$(GenerateComponentDescriptor)' == 'true'">
+    <Error Condition="'$(ComponentSettingsFile)' == '' or '$(ComponentDescriptorFile)' == ''"
+           Text="TheKrystalShip.KGSM.ComponentConfig needs ComponentSettingsFile (the component's kgsm-&lt;name&gt;.settings.json) and ComponentDescriptorFile (where deploy/&lt;name&gt;.leaf.json or .anchor.json is written). Set both, or set GenerateComponentDescriptor=false to use the attributes without generating a descriptor." />
+  </Target>
+
+  <!--
+    Runs against the intermediate assembly, which exists under both `dotnet build` and an AOT publish,
+    so the descriptor is refreshed by the same command that produces the binary it describes. The
+    generator rewrites nothing when the content is unchanged, so this is cheap on an incremental build
+    and never churns the file's timestamp.
+  -->
+  <Target Name="GenerateComponentDescriptor"
+          AfterTargets="Build"
+          DependsOnTargets="_ValidateComponentDescriptorInputs"
+          Condition="'$(GenerateComponentDescriptor)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+
+    <Error Condition="!Exists('$(ComponentDescriptorGeneratorPath)')"
+           Text="the component descriptor generator is missing from the package at $(ComponentDescriptorGeneratorPath)." />
+
+    <!-- $(TargetPath), not the intermediate assembly: a component whose settings types live in a
+         library it references only has those assemblies beside it in the output directory. -->
+    <Exec Command="dotnet &quot;$(ComponentDescriptorGeneratorPath)&quot; --assembly &quot;$(TargetPath)&quot; --settings &quot;$(ComponentSettingsFile)&quot; --out &quot;$(ComponentDescriptorFile)&quot;" />
+  </Target>
+
+</Project>

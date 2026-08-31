@@ -1,7 +1,7 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
-namespace TheKrystalShip.KGSM.LeafConfig.Gen;
+namespace TheKrystalShip.KGSM.ComponentConfig.Gen;
 
 /// <summary>
 /// Writes the descriptor JSON. Key order is fixed rather than incidental so the file diffs cleanly:
@@ -42,18 +42,13 @@ internal static class Emitter
         return System.Text.Encoding.UTF8.GetString(buffer.ToArray()) + "\n";
     }
 
-    private static void WriteIdentity(Utf8JsonWriter writer, LeafIdentity identity)
+    private static void WriteIdentity(Utf8JsonWriter writer, ComponentIdentity identity)
     {
         writer.WriteNumber(Names.Json.SchemaVersion, Names.SchemaVersion);
         writer.WriteString(Names.Json.Id, identity.Id);
         writer.WriteString(Names.Json.DisplayName, identity.DisplayName);
         writer.WriteString(Names.Json.Unit, identity.Unit);
         writer.WriteString(Names.Json.Role, identity.Role);
-        // Omitted when false, like readOnly below: absence is what a node's leaf looks like, and
-        // every descriptor but an anchor's is one.
-        if (identity.Anchor)
-            writer.WriteBoolean(Names.Json.Anchor, true);
-
         writer.WriteBoolean(Names.Json.OnDemand, identity.OnDemand);
         writer.WriteString(Names.Json.ApplyMode, identity.ApplyMode);
 

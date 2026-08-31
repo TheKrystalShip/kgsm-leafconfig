@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace TheKrystalShip.KGSM.LeafConfig.Gen;
+namespace TheKrystalShip.KGSM.ComponentConfig.Gen;
 
 /// <summary>
 /// The leaf's settings file, flattened the way <c>IConfiguration</c> maps environment variables:

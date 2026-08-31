@@ -1,16 +1,29 @@
-# CLAUDE.md — kgsm-leafconfig
+# CLAUDE.md — kgsm-componentconfig
 
-Guidance for Claude Code working in **kgsm-leafconfig**. The umbrella `../CLAUDE.md` owns the
+Guidance for Claude Code working in **kgsm-componentconfig**. The umbrella `../CLAUDE.md` owns the
 cross-cutting ecosystem rules; this file covers what is specific to this package.
 
 ## What this is
 
-`TheKrystalShip.KGSM.LeafConfig` — the attributes a leaf declares its Control Panel configuration
-surface with, plus the build-time generator that writes `deploy/<leaf>.leaf.json` from them.
+`TheKrystalShip.KGSM.ComponentConfig` — the attributes a KGSM **component** declares its Control Panel
+configuration surface with, plus the build-time generator that writes its descriptor from them.
 `README.md` is the usage reference and the attribute vocabulary; read it first.
 
-This is **not a leaf**. It deploys nowhere, has no `deploy/` directory and no systemd unit. It is a
-build-time dependency of leaves, consumed as a versioned `PackageReference` from the org's GitHub
+A component is a **leaf** or an **anchor**, and the difference is what it belongs to. A leaf is run by
+one node, described on that node's disk, and administered as one of that node's services. An anchor
+serves one capability to the whole cluster, is a peer of every node in it, and is reached by address
+from a browser that is usually nowhere near the machine it runs on. So there are two identity
+attributes — `[Leaf]` and `[Anchor]` — and **one shared body**: every group, floor source and field
+describes either kind, because what a component can be configured with is the same question whichever
+it is. Declaring both is refused; a component is one thing.
+
+The kind is **not written into the descriptor**. The generator routes on the output file's suffix —
+`.leaf.json` or `.anchor.json` — and refuses one that disagrees with the identity attribute, so a
+component cannot reach the wrong directory without failing the build. Where the file is installed is
+what says which, and two records of one fact can disagree.
+
+This is **neither**. It deploys nowhere, has no `deploy/` directory and no systemd unit. It is a
+build-time dependency of components, consumed as a versioned `PackageReference` from the org's GitHub
 Packages feed the same way `kgsm-lib` is.
 
 **Authority for the descriptor *format* is `../leaf-config-descriptor.md`.** This repo implements a
@@ -19,9 +32,9 @@ producer for it; when the two disagree, that document wins and this code is the 
 ## Commands
 
 ```bash
-dotnet build kgsm-leafconfig.slnx
-dotnet test kgsm-leafconfig.slnx
-../scripts/publish-packages.sh kgsm-leafconfig     # pack + push to the org's feed
+dotnet build kgsm-componentconfig.slnx
+dotnet test kgsm-componentconfig.slnx
+../scripts/publish-packages.sh kgsm-componentconfig     # pack + push to the org's feed
 ```
 
 A consumer resolves the package by `id+version` and NuGet caches on that pair, so **bump
@@ -33,16 +46,18 @@ package to every leaf, from the cache, with no error.
 | Path | What |
 |---|---|
 | `src/Attributes/` | The attribute definitions. Plain source, no project — packed into `build/src/` and compiled into each leaf by the package's props file. |
-| `src/Generator/` | The tool. A plain JIT console app (`leafdescgen`), packed into `tools/net10.0/`. |
+| `src/Generator/` | The tool. A plain JIT console app (`componentdescgen`), packed into `tools/net10.0/`. |
 | `src/Package/` | Packaging only. Produces the nupkg; builds nothing of its own. |
 | `build/*.props` `*.targets` | What a consuming leaf gets: the attribute source, `GenerateDocumentationFile`, and the `AfterTargets="Build"` generation step. |
 | `tests/Fixtures/SampleLeaf/` | A real compiled leaf covering every shape the scanner handles. |
-| `tests/LeafConfig.Tests/` | Generator, validator and settings-flattening tests. |
+| `tests/Fixtures/SampleAnchor/` | The same, as an anchor — the fixture that keeps one shared body honest rather than coincidental. |
+| `tests/Fixtures/ConfusedComponent/` | Declares both identities, so the refusal is tested against a real assembly. |
+| `tests/ComponentConfig.Tests/` | Generator, validator and settings-flattening tests. |
 
 ## The invariant this package exists to protect
 
-**A leaf gains nothing at runtime from being described.** Three decisions hold that up, and each one
-is load-bearing:
+**A component gains nothing at runtime from being described.** Three decisions hold that up, and each
+one is load-bearing:
 
 1. **The attributes ship as source, not as an assembly.** There is no reference to resolve, trim or
    load. It also means the generator matches attributes **by name**, not by type identity — which is
@@ -65,7 +80,7 @@ packaging, re-check all three** — the failure is silent, and it lands in anoth
   package just ships without the tool. `PackGeneratorTool` hooks
   `TargetsForTfmSpecificContentInPackage` for that reason, and errors if it published nothing.
 - **The generator has no apphost** (`UseAppHost=false`). It is always invoked as
-  `dotnet leafdescgen.dll`, and the extensionless apphost is read by NuGet as a *directory* when
+  `dotnet componentdescgen.dll`, and the extensionless apphost is read by NuGet as a *directory* when
   packing, burying the real files a level deeper.
 - **A nested `<MSBuild>` call inherits global properties.** The leaf-side target that invokes the
   tool must not pass an AOT publish's `RuntimeIdentifier` down to a portable tool build; the package's
@@ -75,7 +90,8 @@ packaging, re-check all three** — the failure is silent, and it lands in anoth
   declaration — do not replace it with anything that reads the constant at runtime.
 - **The `id`-vs-installed-filename rule is not checked here.** A repo generates
   `deploy/kgsm-x.leaf.json` and installs it as `/var/lib/kgsm/leaves/x.json`; the rename is
-  `deploy-common.sh`'s, and it checks the id there.
+  `deploy-common.sh`'s, and it checks the id there. What IS checked here is the suffix, because that
+  is what decides which directory the file reaches and therefore what kind of thing it is read as.
 - **The golden file pins the whole emitted document.** When a change to the format is intended,
   regenerate it and read the diff — that file is the record of what every leaf's descriptor will
   look like.

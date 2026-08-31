@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
-    <RootNamespace>TheKrystalShip.KGSM.LeafConfig.Tests</RootNamespace>
-    <AssemblyName>LeafConfig.Tests</AssemblyName>
+    <RootNamespace>TheKrystalShip.KGSM.ComponentConfig.Tests</RootNamespace>
+    <AssemblyName>ComponentConfig.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +22,8 @@
          the generator does to a real leaf. -->
     <ProjectReference Include="../Fixtures/SampleLeaf/SampleLeaf.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="../Fixtures/BrokenLeaf/BrokenLeaf.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../Fixtures/SampleAnchor/SampleAnchor.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../Fixtures/ConfusedComponent/ConfusedComponent.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +39,18 @@
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>MissingSectionAssembly</_Parameter1>
       <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/BrokenLeaf/bin/$(Configuration)/net10.0/BrokenLeaf.dll</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>SampleAnchorAssembly</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/SampleAnchor/bin/$(Configuration)/net10.0/SampleAnchor.dll</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>SampleAnchorSettings</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/SampleAnchor/kgsm-sample-anchor.settings.json</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ConfusedComponentAssembly</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/ConfusedComponent/bin/$(Configuration)/net10.0/ConfusedComponent.dll</_Parameter2>
     </AssemblyAttribute>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>GoldenDirectory</_Parameter1>

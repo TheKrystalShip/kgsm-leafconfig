@@ -1,7 +1,7 @@
-using TheKrystalShip.KGSM.LeafConfig.Gen;
+using TheKrystalShip.KGSM.ComponentConfig.Gen;
 using Xunit;
 
-namespace TheKrystalShip.KGSM.LeafConfig.Tests;
+namespace TheKrystalShip.KGSM.ComponentConfig.Tests;
 
 /// <summary>
 /// The rules that fail a leaf's build. Each one stands for a way the Control Panel would otherwise
@@ -15,7 +15,7 @@ public class ValidatorTests
         IReadOnlyList<FloorSource>? floorSources = null,
         IReadOnlyList<FrameworkNamespace>? exempt = null,
         IEnumerable<string>? settingsKeys = null,
-        LeafIdentity? identity = null,
+        ComponentIdentity? identity = null,
         IReadOnlyList<string>? gpuBackendUnits = null)
     {
         var descriptor = new Descriptor(
@@ -33,8 +33,8 @@ public class ValidatorTests
         return ex.Message;
     }
 
-    private static LeafIdentity Identity(string applyMode = "restart", bool readOnly = false, string? reason = null) =>
-        new("x", "X", "kgsm-x.service", "A leaf.", Anchor: false, OnDemand: false, applyMode, readOnly, reason);
+    private static ComponentIdentity Identity(string applyMode = "restart", bool readOnly = false, string? reason = null) =>
+        new(ComponentKind.Leaf, "x", "X", "kgsm-x.service", "A leaf.", OnDemand: false, applyMode, readOnly, reason);
 
     private static FieldDef Field(
         string key = "k",

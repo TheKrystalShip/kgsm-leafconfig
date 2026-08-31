@@ -1,12 +1,26 @@
-namespace TheKrystalShip.KGSM.LeafConfig.Gen;
+namespace TheKrystalShip.KGSM.ComponentConfig.Gen;
 
-/// <summary>The descriptor's leaf-level keys, read from the assembly's <c>[Leaf]</c> attribute.</summary>
-internal sealed record LeafIdentity(
+/// <summary>
+/// Which kind of component this assembly is. A leaf is run by one node and described on that node's
+/// disk; an anchor serves one capability to the whole cluster and is a peer of every node in it. The
+/// kind is not written into the descriptor — where the file is installed is what says which, and two
+/// records of one fact can disagree.
+/// </summary>
+internal enum ComponentKind
+{
+    Leaf,
+    Anchor,
+}
+
+/// <summary>The descriptor's component-level keys, read from the assembly's <c>[Leaf]</c> or
+/// <c>[Anchor]</c> attribute. The two carry the same keys — what a component can be configured with
+/// is the same question whichever kind it is.</summary>
+internal sealed record ComponentIdentity(
+    ComponentKind Kind,
     string Id,
     string DisplayName,
     string Unit,
     string Role,
-    bool Anchor,
     bool OnDemand,
     string ApplyMode,
     bool ReadOnly,
@@ -70,7 +84,7 @@ internal enum DescriptionSource
 internal sealed record FrameworkNamespace(string Prefix, string Reason);
 
 internal sealed record Descriptor(
-    LeafIdentity Identity,
+    ComponentIdentity Identity,
 
     /// <summary>
     /// Systemd units whose GPU usage is attributed to this leaf. Empty for a leaf that drives no

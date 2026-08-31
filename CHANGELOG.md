@@ -5,38 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.0.0]
 
-### Added — `Anchor`, for a component that is a cluster member rather than a node's leaf
+### Changed — the package describes COMPONENTS, and a component is a leaf or an anchor
 
-An optional flag on `[Leaf]`, emitted as the descriptor's `anchor` key. An auth anchor serves one
-capability to the whole cluster and is a peer of the node it happens to sit beside, so it belongs on
-no node's service board — kgsm-api reads this key to leave it off, and the component is reached as
-the member it is. It still ships a descriptor, because what it can be configured with is worth
-describing wherever that is read.
+`TheKrystalShip.KGSM.ComponentConfig`, namespace `TheKrystalShip.KGSM.ComponentConfig`, tool
+`componentdescgen`. The old name described half of what this does: an anchor has settings, groups,
+floor sources and an apply mode exactly as a leaf does, and calling all of it "leaf" was the reason an
+anchor's descriptor was indistinguishable from a leaf's.
 
-Omitted for a leaf that is not one, the same way `readOnly` is: absence is what a node's leaf looks
-like, and every descriptor but an anchor's is one. A new optional leaf-level key is additive within
-`schemaVersion: 1`, so the version is unchanged and every existing reader ignores it.
+Two identity attributes and one shared body. `[Leaf]` is a component one node runs, described on that
+node's disk and administered as one of its services. `[Anchor]` serves one capability to the whole
+cluster, is a peer of every node in it, and is reached by address rather than through a neighbour.
+Every other attribute loses its `Leaf` prefix for `Config` — they describe either kind, so naming them
+after one was a misnomer. Declaring both identities is refused: a component is one thing, and picking
+one by a precedence rule would put it in the wrong directory on a deploy nobody re-read.
 
-### Added — `[LeafGpuBackend]`, for GPU spent through a unit the leaf does not own
+**The kind is not written into the descriptor.** The generator routes on the output file's suffix —
+`.leaf.json` or `.anchor.json` — and refuses one that disagrees with the identity attribute, so a
+component cannot reach the wrong directory without failing the build. Where the file is installed is
+what says which; a key repeating it is a second record of one fact that can disagree with the first.
+
+MSBuild properties follow: `ComponentSettingsFile`, `ComponentDescriptorFile`,
+`GenerateComponentDescriptor`.
+
+### Added — `[ConfigGpuBackend]`, for GPU spent through a unit the component does not own
 
 An assembly-level attribute naming a systemd unit whose GPU usage is attributed to the declaring
-leaf, emitted as the descriptor's optional `gpuBackendUnits` array. The assistant drives
+component, emitted as the descriptor's optional `gpuBackendUnits` array. The assistant drives
 `llama-server` over HTTP and holds no GPU context of its own, so nothing in its cgroup can reveal
-where its GPU work is spent; a leaf whose own processes hold the context needs no attribute, since
-that falls out of the cgroup already.
+where its GPU work is spent; a component whose own processes hold the context needs no attribute,
+since that falls out of the cgroup already.
 
-The key is omitted for a leaf that declares none — an empty array would read as a leaf that reaches a
-card and spends nothing on it. Repeating a unit fails the build, because its memory would be counted
-twice. A new optional leaf-level key is additive within `schemaVersion: 1`, so the version is
-unchanged and every existing reader ignores it.
+The key is omitted for one that declares none — an empty array would read as reaching a card and
+spending nothing on it. Repeating a unit fails the build, because its memory would be counted twice.
 
 ### Changed — package license metadata is GPL-3.0-or-later
 
-`PackageLicenseExpression` now matches the repo's own `LICENSE`, which it had never declared. Already
-published versions keep the metadata they were built with, since a published version is immutable —
-the correction reaches consumers on the next version bump.
+`PackageLicenseExpression` matches the repo's own `LICENSE`.
 
 ## [2.2.0]
 
@@ -51,7 +57,7 @@ the correction reaches consumers on the next version bump.
 ## [2.1.0]
 
 ### Added
-- **`[LeafFrameworkField(SettingsKey = "...")]`** for a setting whose override variable is spelled
+- **`[ConfigFrameworkField(SettingsKey = "...")]`** for a setting whose override variable is spelled
   differently from its configuration key. ASP.NET's bind address is the case: the host reads `Urls`
   from configuration and `ASPNETCORE_URLS` from the environment, one setting reached two ways. The
   variable is what an override file must write; the settings key is where the value comes from and
@@ -66,7 +72,7 @@ the correction reaches consumers on the next version bump.
 ## [2.0.0]
 
 ### Changed — a leaf names its section assemblies instead of the generator guessing
-- **`[assembly: LeafSectionAssembly("Name")]` replaces the directory scan.** Discovering sections by
+- **`[assembly: ConfigSectionAssembly("Name")]` replaces the directory scan.** Discovering sections by
   looking at whatever sits beside the binary is unsafe in this ecosystem, because leaves share
   libraries: kgsm-bot compiles against the assistant's projects, so annotating a settings type over
   there would have pulled it into the bot's descriptor — describing keys the bot's settings file
@@ -77,12 +83,12 @@ the correction reaches consumers on the next version bump.
 
 ### Migrating
 A leaf whose settings types all live in its entry assembly needs no change. One with a settings
-library adds a single `[assembly: LeafSectionAssembly("<its name>")]` beside its `[Leaf]`.
+library adds a single `[assembly: ConfigSectionAssembly("<its name>")]` beside its `[Leaf]`.
 
 ## [1.4.0]
 
 ### Added
-- **`[LeafFrameworkField(NoDefault = true)]`**, matching the property attribute. A blank in the
+- **`[ConfigFrameworkField(NoDefault = true)]`**, matching the property attribute. A blank in the
   settings file that the leaf resolves to something else at runtime — a conversation database that
   derives a path under the user's home — is not a default of empty string, and publishing it as one
   is a fabricated value on the screen whose whole job is saying where a value came from.
@@ -128,7 +134,7 @@ library adds a single `[assembly: LeafSectionAssembly("<its name>")]` beside its
 ## [1.0.0]
 
 ### Added
-- **`TheKrystalShip.KGSM.LeafConfig`** — attributes for declaring a leaf's Control Panel
+- **`TheKrystalShip.KGSM.ComponentConfig`** — attributes for declaring a leaf's Control Panel
   configuration surface on its typed settings class, and a build-time generator that writes the leaf
   config descriptor from them.
 - **Build-only packaging.** The attributes ship as source and the generator as a tool; the package
