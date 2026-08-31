@@ -22,14 +22,19 @@ internal static class Emitter
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
-    public static string Render(Descriptor descriptor)
+    /// <param name="written">
+    /// Which of the two descriptors this is. It decides one field — the role sentence — and only for a
+    /// component whose kind its deployment settles; for every other component it is the kind the
+    /// assembly declares and changes nothing.
+    /// </param>
+    public static string Render(Descriptor descriptor, ComponentKind? written = null)
     {
         using var buffer = new MemoryStream();
         using (var writer = new Utf8JsonWriter(buffer, Options))
         {
             writer.WriteStartObject();
 
-            WriteIdentity(writer, descriptor.Identity);
+            WriteIdentity(writer, descriptor.Identity, written ?? descriptor.Identity.Kind);
             WriteGpuBackendUnits(writer, descriptor.GpuBackendUnits);
             WriteFloorSources(writer, descriptor.FloorSources);
             WriteGroups(writer, descriptor.Groups);
@@ -42,13 +47,13 @@ internal static class Emitter
         return System.Text.Encoding.UTF8.GetString(buffer.ToArray()) + "\n";
     }
 
-    private static void WriteIdentity(Utf8JsonWriter writer, ComponentIdentity identity)
+    private static void WriteIdentity(Utf8JsonWriter writer, ComponentIdentity identity, ComponentKind written)
     {
         writer.WriteNumber(Names.Json.SchemaVersion, Names.SchemaVersion);
         writer.WriteString(Names.Json.Id, identity.Id);
         writer.WriteString(Names.Json.DisplayName, identity.DisplayName);
         writer.WriteString(Names.Json.Unit, identity.Unit);
-        writer.WriteString(Names.Json.Role, identity.Role);
+        writer.WriteString(Names.Json.Role, identity.RoleFor(written));
         writer.WriteBoolean(Names.Json.OnDemand, identity.OnDemand);
         writer.WriteString(Names.Json.ApplyMode, identity.ApplyMode);
 

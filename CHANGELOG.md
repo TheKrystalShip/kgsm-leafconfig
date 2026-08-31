@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added — a component whose kind its deployment decides
+
+`[LeafOrAnchor]`, a third identity attribute beside `[Leaf]` and `[Anchor]`, for a component that is a
+leaf on a machine standing alone and an anchor in a cluster from one build. It carries the same keys
+the other two do, plus `AnchorRole` — the role sentence the anchor descriptor states, because a leaf's
+usually names the host it serves and an anchor has no host.
+
+A component declaring it is described **both ways**. The build names one output path and the generator
+writes the other beside it by swapping the suffix, so the deploy holds both and installs whichever its
+standing calls for; two paths a build set independently would be two places to spell one id. The two
+files are identical but for that one sentence, and neither states a kind — where a descriptor is
+installed remains the only record of what a component is.
+
+Carrying two of the three identities is refused, and the message names which two are present.
+
 ## [3.0.0]
 
 ### Changed — the package describes COMPONENTS, and a component is a leaf or an anchor

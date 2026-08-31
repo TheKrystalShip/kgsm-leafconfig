@@ -229,14 +229,59 @@ public class GeneratorTests
     }
 
     [Fact]
-    public void A_component_that_claims_both_identities_is_refused()
+    public void A_component_that_claims_two_identities_is_refused()
     {
-        // One or the other. Picking one by a precedence rule would put a component in the wrong
-        // directory on a deploy nobody re-read.
+        // A component states one thing about what it is. Picking one by a precedence rule would put a
+        // component in the wrong directory on a deploy nobody re-read.
         GenException ex = Assert.Throws<GenException>(
             () => ComponentDescriptorFactory.Build(Fixture.ConfusedAssembly, Fixture.Settings));
 
-        Assert.Contains("one or the other", ex.Message);
+        // Both are named, because the fix is deleting one and the message has to say which two are
+        // there to choose between.
+        Assert.Contains("[assembly: Leaf(...)]", ex.Message);
+        Assert.Contains("[assembly: Anchor(...)]", ex.Message);
+    }
+
+    [Fact]
+    public void A_component_whose_deployment_decides_its_kind_is_described_both_ways()
+    {
+        // The same body again, and the one field that cannot be shared: a leaf's role sentence names
+        // the host it serves, and an anchor has no host. Everything else is identical, which is what
+        // makes describing it twice safe rather than a second declaration to keep in step.
+        Descriptor either = ComponentDescriptorFactory
+            .Build(Fixture.EitherAssembly, Fixture.EitherSettings).Descriptor;
+
+        Assert.Equal(ComponentKind.Either, either.Identity.Kind);
+        Assert.Equal("A fixture serving the host it runs on.", either.Identity.RoleFor(ComponentKind.Leaf));
+        Assert.Equal("A fixture serving the whole cluster.", either.Identity.RoleFor(ComponentKind.Anchor));
+
+        string leaf = Emitter.Render(either, ComponentKind.Leaf);
+        string anchor = Emitter.Render(either, ComponentKind.Anchor);
+
+        Assert.NotEqual(leaf, anchor);
+        foreach (string rendered in new[] { leaf, anchor })
+        {
+            JsonElement root = JsonDocument.Parse(rendered).RootElement;
+            Assert.Equal("sample-either", root.GetProperty("id").GetString());
+            Assert.Equal("kgsm-sample-either.service", root.GetProperty("unit").GetString());
+
+            // Still no kind in either file. Being describable both ways is exactly the case where a
+            // key repeating what the directory already says would be believed over the directory.
+            Assert.False(root.TryGetProperty("kind", out _));
+        }
+    }
+
+    [Fact]
+    public void An_unset_anchor_role_repeats_the_one_that_is_set()
+    {
+        // The sentence is shared when nobody says otherwise. Emitting an empty role for the standing
+        // that did not declare one would put a blank line where the panel describes the component.
+        var identity = new ComponentIdentity(
+            ComponentKind.Either, "x", "X", "kgsm-x.service", "One sentence.",
+            OnDemand: false, ApplyMode: "restart", ReadOnly: false, ReadOnlyReason: null);
+
+        Assert.Equal("One sentence.", identity.RoleFor(ComponentKind.Leaf));
+        Assert.Equal("One sentence.", identity.RoleFor(ComponentKind.Anchor));
     }
 
     [Fact]
@@ -246,7 +291,7 @@ public class GeneratorTests
         GenException ex = Assert.Throws<GenException>(
             () => ComponentDescriptorFactory.Build(typeof(Emitter).Assembly.Location, Fixture.Settings));
 
-        Assert.Contains("neither", ex.Message);
+        Assert.Contains("none of", ex.Message);
     }
 
     [Fact]

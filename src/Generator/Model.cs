@@ -2,19 +2,26 @@ namespace TheKrystalShip.KGSM.ComponentConfig.Gen;
 
 /// <summary>
 /// Which kind of component this assembly is. A leaf is run by one node and described on that node's
-/// disk; an anchor serves one capability to the whole cluster and is a peer of every node in it. The
-/// kind is not written into the descriptor — where the file is installed is what says which, and two
-/// records of one fact can disagree.
+/// disk; an anchor serves one capability to the whole cluster and is a peer of every node in it;
+/// either means the kind is decided by the deployment, so both descriptors are written and the deploy
+/// installs the one its standing calls for. The kind is not written into the descriptor — where the
+/// file is installed is what says which, and two records of one fact can disagree.
 /// </summary>
 internal enum ComponentKind
 {
     Leaf,
     Anchor,
+    Either,
 }
 
-/// <summary>The descriptor's component-level keys, read from the assembly's <c>[Leaf]</c> or
-/// <c>[Anchor]</c> attribute. The two carry the same keys — what a component can be configured with
-/// is the same question whichever kind it is.</summary>
+/// <summary>The descriptor's component-level keys, read from whichever identity attribute the assembly
+/// carries. All three carry the same keys — what a component can be configured with is the same
+/// question whichever kind it is.</summary>
+/// <param name="AnchorRole">
+/// What <see cref="Role"/> says when the descriptor being written is the anchor one. Only an
+/// <see cref="ComponentKind.Either"/> component has both, and only because a leaf's sentence usually
+/// names the host it serves, which an anchor does not have.
+/// </param>
 internal sealed record ComponentIdentity(
     ComponentKind Kind,
     string Id,
@@ -24,7 +31,14 @@ internal sealed record ComponentIdentity(
     bool OnDemand,
     string ApplyMode,
     bool ReadOnly,
-    string? ReadOnlyReason);
+    string? ReadOnlyReason,
+    string? AnchorRole = null)
+{
+    /// <summary>The role sentence for the descriptor being written, which is the only field whose
+    /// value depends on which of the two an either-kind component is being described as.</summary>
+    public string RoleFor(ComponentKind written) =>
+        written == ComponentKind.Anchor && !string.IsNullOrWhiteSpace(AnchorRole) ? AnchorRole! : Role;
+}
 
 internal sealed record GroupDef(string Id, string Label, int Order);
 

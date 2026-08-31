@@ -12,6 +12,9 @@
     `.anchor.json` for one that serves the whole cluster — and the generator refuses a suffix that
     disagrees with the identity attribute the assembly carries.
 
+    A component declaring [LeafOrAnchor] is described both ways: name either suffix here and the other
+    file is written beside it, so the deploy has both and installs whichever its standing calls for.
+
     There is no step to remember: a knob added to the settings type reaches the Control Panel as soon
     as the component compiles, and a knob the settings file declares that nothing describes fails the
     build naming the key.

@@ -66,8 +66,41 @@ internal static class Program
         CheckDestination(result.Descriptor.Identity, outPath);
         Report(result);
 
-        string rendered = Emitter.Render(result.Descriptor);
-        return check ? Compare(outPath, rendered) : Write(outPath, rendered, result.Descriptor);
+        int worst = Ok;
+        foreach ((string path, ComponentKind written) in Destinations(result.Descriptor.Identity, outPath))
+        {
+            string rendered = Emitter.Render(result.Descriptor, written);
+            int code = check ? Compare(path, rendered) : Write(path, rendered, result.Descriptor);
+            if (code != Ok)
+                worst = code;
+        }
+
+        return worst;
+    }
+
+    /// <summary>
+    /// Every descriptor this component is described by, and what each one describes it as.
+    /// </summary>
+    /// <remarks>
+    /// A component that is one kind is described once. One whose kind its deployment decides is
+    /// described twice, beside each other, and the deploy installs the one its standing calls for —
+    /// so the second file is derived from the first by swapping the suffix rather than named
+    /// separately. Two output paths a build could set independently is two places to spell one id.
+    /// </remarks>
+    private static IEnumerable<(string Path, ComponentKind Written)> Destinations(
+        ComponentIdentity identity, string outPath)
+    {
+        if (identity.Kind != ComponentKind.Either)
+        {
+            yield return (outPath, identity.Kind);
+            yield break;
+        }
+
+        bool anchorNamed = outPath.EndsWith(AnchorSuffix, StringComparison.Ordinal);
+        string stem = outPath[..^(anchorNamed ? AnchorSuffix.Length : LeafSuffix.Length)];
+
+        yield return (stem + LeafSuffix, ComponentKind.Leaf);
+        yield return (stem + AnchorSuffix, ComponentKind.Anchor);
     }
 
     /// <summary>
@@ -78,6 +111,24 @@ internal static class Program
     /// </summary>
     private static void CheckDestination(ComponentIdentity identity, string outPath)
     {
+        if (identity.Kind == ComponentKind.Either)
+        {
+            // Either suffix names the pair, because both files are written and the build only has to
+            // say where they go. Anything else has no suffix to swap and would silently write one
+            // file with the other's name appended.
+            if (outPath.EndsWith(LeafSuffix, StringComparison.Ordinal)
+                || outPath.EndsWith(AnchorSuffix, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            throw new GenException(
+                $"{identity.Id} declares [assembly: LeafOrAnchor(...)], so it is described both ways and " +
+                $"its descriptors are written to '{LeafSuffix}' and '{AnchorSuffix}' paths beside each " +
+                $"other — '{Path.GetFileName(outPath)}' is neither. Name either one; the other is written " +
+                "beside it.");
+        }
+
         string expected = identity.Kind == ComponentKind.Anchor ? AnchorSuffix : LeafSuffix;
         if (outPath.EndsWith(expected, StringComparison.Ordinal))
             return;

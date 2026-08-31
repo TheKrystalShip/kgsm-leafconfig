@@ -24,6 +24,7 @@
     <ProjectReference Include="../Fixtures/BrokenLeaf/BrokenLeaf.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="../Fixtures/SampleAnchor/SampleAnchor.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="../Fixtures/ConfusedComponent/ConfusedComponent.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../Fixtures/EitherComponent/EitherComponent.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -51,6 +52,14 @@
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>ConfusedComponentAssembly</_Parameter1>
       <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/ConfusedComponent/bin/$(Configuration)/net10.0/ConfusedComponent.dll</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>EitherComponentAssembly</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/EitherComponent/bin/$(Configuration)/net10.0/EitherComponent.dll</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>EitherComponentSettings</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/EitherComponent/kgsm-sample-either.settings.json</_Parameter2>
     </AssemblyAttribute>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>GoldenDirectory</_Parameter1>

@@ -13,6 +13,7 @@ internal static class Names
     {
         internal const string Leaf = "LeafAttribute";
         internal const string Anchor = "AnchorAttribute";
+        internal const string LeafOrAnchor = "LeafOrAnchorAttribute";
         internal const string Group = "ConfigGroupAttribute";
         internal const string FloorSource = "ConfigFloorSourceAttribute";
         internal const string GpuBackend = "ConfigGpuBackendAttribute";
@@ -27,6 +28,7 @@ internal static class Names
     /// <summary>Named attribute arguments. These match the property names in ComponentConfigAttributes.cs.</summary>
     internal static class Args
     {
+        internal const string AnchorRole = "AnchorRole";
         internal const string OnDemand = "OnDemand";
         internal const string ApplyMode = "ApplyMode";
         internal const string ReadOnly = "ReadOnly";

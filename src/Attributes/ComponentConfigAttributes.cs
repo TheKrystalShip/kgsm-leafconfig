@@ -2,9 +2,11 @@
 //
 // A KGSM component is a LEAF or an ANCHOR, and the difference is what it belongs to: a leaf is run
 // by one node and described on that node's disk, an anchor serves one capability to the whole
-// cluster and is a peer of every node in it. So there are two identity attributes and one shared
-// body — every group, floor source and field below describes either kind, because what a component
-// can be configured with is the same question whichever it is.
+// cluster and is a peer of every node in it. Some components are one of the two for as long as they
+// exist and say so; some are whichever their deployment makes them, and say that instead. So there
+// are three identity attributes and one shared body — every group, floor source and field below
+// describes any of them, because what a component can be configured with is the same question
+// whichever kind it is.
 //
 // These attributes are compiled into the component's assembly and read back out of its metadata by
 // the generator, which writes the descriptor its deploy installs. Nothing here is read at runtime:
@@ -92,6 +94,60 @@ internal sealed class AnchorAttribute(string id, string displayName, string unit
     public bool ReadOnly { get; set; }
 
     /// <summary>Why, in the anchor's own words. Required when <see cref="ReadOnly"/>.</summary>
+    public string? ReadOnlyReason { get; set; }
+}
+
+/// <summary>
+/// Identifies the assembly as a KGSM component whose kind is a <b>deployment choice</b>: a leaf on a
+/// machine that stands alone, an anchor in a cluster, from one build.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Most components are one or the other for as long as they exist, and say so with
+/// <see cref="LeafAttribute"/> or <see cref="AnchorAttribute"/>. A few are not: what they serve is
+/// the same code either way, and what changes is its scope — one node's, or the whole cluster's. A
+/// component declaring this is described <b>both</b> ways, and the deploy installs whichever
+/// descriptor the standing it is running in calls for.
+/// </para>
+/// <para>
+/// It is a third attribute rather than a flag on the other two because it states something they do
+/// not: that the kind is not knowable at build time. A component that carries this and is only ever
+/// deployed one way costs a file nobody reads; one that carries <see cref="LeafAttribute"/> and is
+/// deployed as an anchor is administered from a node it has nothing to do with.
+/// </para>
+/// </remarks>
+[AttributeUsage(AttributeTargets.Assembly)]
+internal sealed class LeafOrAnchorAttribute(string id, string displayName, string unit, string role) : Attribute
+{
+    /// <summary>Stable component id, lowercase kebab. Becomes the descriptor filename stem.</summary>
+    public string Id { get; } = id;
+
+    /// <summary>Human name for the panel.</summary>
+    public string DisplayName { get; } = displayName;
+
+    /// <summary>The systemd unit that carries it.</summary>
+    public string Unit { get; } = unit;
+
+    /// <summary>One sentence: what this does as a leaf, serving the node it runs on.</summary>
+    public string Role { get; } = role;
+
+    /// <summary>
+    /// The same sentence for the anchor standing, where the scope is the cluster rather than one
+    /// machine. Unset repeats <see cref="Role"/>, which is right only when the sentence is true of
+    /// both — a leaf's role usually says "this host", and on an anchor that is wrong.
+    /// </summary>
+    public string? AnchorRole { get; set; }
+
+    /// <summary>True for a component that idle-exits, so a reader does not take "inactive" for a fault.</summary>
+    public bool OnDemand { get; set; }
+
+    /// <summary><c>restart</c> or <c>reload</c>.</summary>
+    public string ApplyMode { get; set; } = "restart";
+
+    /// <summary>True for a component whose configuration is readable but not editable from the panel.</summary>
+    public bool ReadOnly { get; set; }
+
+    /// <summary>Why, in the component's own words. Required when <see cref="ReadOnly"/>.</summary>
     public string? ReadOnlyReason { get; set; }
 }
 

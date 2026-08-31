@@ -98,7 +98,8 @@ and the build names each one, so neither stays invisible.
 | Attribute | Where | What it declares |
 |---|---|---|
 | `[Leaf]` | assembly | id, display name, unit, role, `onDemand`, `applyMode`, `readOnly` — a component one NODE runs |
-| `[Anchor]` | assembly | the same keys — a component that serves one capability to the whole CLUSTER. Exactly one of the two; declaring both is refused |
+| `[Anchor]` | assembly | the same keys — a component that serves one capability to the whole CLUSTER |
+| `[LeafOrAnchor]` | assembly | the same keys, and `AnchorRole` for the sentence the anchor descriptor carries — a component whose kind its DEPLOYMENT decides. Described both ways, so the deploy installs the descriptor its standing calls for. Exactly one of the three; declaring two is refused |
 | `[ConfigGroup]` | assembly | a panel section and its order |
 | `[ConfigFloorSource]` | assembly | where the leaf's own config comes from, lowest precedence first |
 | `[ConfigSectionAssembly]` | assembly | another assembly this leaf's settings sections live in |
@@ -157,7 +158,7 @@ dotnet test kgsm-componentconfig.slnx                          # generator + val
 ../scripts/publish-packages.sh kgsm-componentconfig     # pack + push to the org's feed
 ```
 
-The tests run the generator against `tests/Fixtures/SampleLeaf` and `tests/Fixtures/SampleAnchor`, real compiled components covering every
+The tests run the generator against `tests/Fixtures/SampleLeaf`, `tests/Fixtures/SampleAnchor` and `tests/Fixtures/EitherComponent`, real compiled components covering every
 shape the scanner handles — nested section, name-keyed map, C# enum, secret, suppressed default,
 ignored property, a section in a declared library — and pin the whole emitted document against a
 golden copy.

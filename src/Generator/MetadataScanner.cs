@@ -62,29 +62,50 @@ internal sealed class MetadataScanner(
     // ── Leaf-level ───────────────────────────────────────────────────────────
 
     /// <summary>
-    /// The component's identity, from whichever of the two identity attributes it carries. Both hold
-    /// the same keys, so only the KIND differs — and a component is one thing, so declaring both is an
-    /// error rather than a precedence question nobody would remember the answer to.
+    /// The component's identity, from whichever identity attribute it carries. All three hold the
+    /// same keys, so only the KIND differs — and a component states one thing about what it is, so
+    /// carrying two is an error rather than a precedence question nobody would remember the answer to.
     /// </summary>
     private ComponentIdentity ReadIdentity()
     {
         IList<CustomAttributeData> all = assembly.GetCustomAttributesData();
-        CustomAttributeData? leaf = Attr(all, Names.Attributes.Leaf);
-        CustomAttributeData? anchor = Attr(all, Names.Attributes.Anchor);
 
-        if (leaf is not null && anchor is not null)
+        (string Declared, ComponentKind Kind, CustomAttributeData Data)[] found =
+        [
+            .. new[]
+            {
+                ("[assembly: Leaf(...)]", ComponentKind.Leaf, Attr(all, Names.Attributes.Leaf)),
+                ("[assembly: Anchor(...)]", ComponentKind.Anchor, Attr(all, Names.Attributes.Anchor)),
+                ("[assembly: LeafOrAnchor(...)]", ComponentKind.Either, Attr(all, Names.Attributes.LeafOrAnchor)),
+            }
+            .Where(c => c.Item3 is not null)
+            .Select(c => (c.Item1, c.Item2, c.Item3!)),
+        ];
+
+        if (found.Length > 1)
             throw new GenException(
-                "the assembly carries both [assembly: Leaf(...)] and [assembly: Anchor(...)], and it is " +
-                "one or the other. A leaf is run by one node and described on that node's disk; an anchor " +
-                "serves one capability to the whole cluster. Keep the one this component is.");
+                $"the assembly carries {string.Join(" and ", found.Select(f => f.Declared))}, and it states " +
+                "one thing about what it is. A leaf is run by one node and described on that node's disk; an " +
+                "anchor serves one capability to the whole cluster; LeafOrAnchor is for a component whose kind " +
+                "its deployment decides. Keep the one this component is.");
 
-        CustomAttributeData identity = leaf ?? anchor
-            ?? throw new GenException(
-                "the assembly carries neither [assembly: Leaf(...)] nor [assembly: Anchor(...)], so there " +
-                "is nothing to describe. Declare one, next to the component's settings type.");
+        if (found.Length == 0)
+            throw new GenException(
+                "the assembly carries none of [assembly: Leaf(...)], [assembly: Anchor(...)] or " +
+                "[assembly: LeafOrAnchor(...)], so there is nothing to describe. Declare one, next to the " +
+                "component's settings type.");
+
+        (_, ComponentKind kind, CustomAttributeData identity) = found[0];
+
+        // Read for every kind and meaningful for one. A leaf or an anchor that set it would be stating
+        // a second role for a standing it never enters, so the attributes that cannot use it do not
+        // declare it and nothing here has to police that separately.
+        string? anchorRole = kind == ComponentKind.Either
+            ? Named<string>(identity, Names.Args.AnchorRole)
+            : null;
 
         return new ComponentIdentity(
-            Kind: leaf is not null ? ComponentKind.Leaf : ComponentKind.Anchor,
+            Kind: kind,
             Id: Arg<string>(identity, 0)!,
             DisplayName: Arg<string>(identity, 1)!,
             Unit: Arg<string>(identity, 2)!,
@@ -92,7 +113,8 @@ internal sealed class MetadataScanner(
             OnDemand: Named<bool>(identity, Names.Args.OnDemand),
             ApplyMode: Named<string>(identity, Names.Args.ApplyMode) ?? Names.ApplyModes.Restart,
             ReadOnly: Named<bool>(identity, Names.Args.ReadOnly),
-            ReadOnlyReason: Named<string>(identity, Names.Args.ReadOnlyReason));
+            ReadOnlyReason: Named<string>(identity, Names.Args.ReadOnlyReason),
+            AnchorRole: anchorRole);
     }
 
     private List<GroupDef> ReadGroups() =>

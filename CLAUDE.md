@@ -12,15 +12,23 @@ configuration surface with, plus the build-time generator that writes its descri
 A component is a **leaf** or an **anchor**, and the difference is what it belongs to. A leaf is run by
 one node, described on that node's disk, and administered as one of that node's services. An anchor
 serves one capability to the whole cluster, is a peer of every node in it, and is reached by address
-from a browser that is usually nowhere near the machine it runs on. So there are two identity
-attributes — `[Leaf]` and `[Anchor]` — and **one shared body**: every group, floor source and field
-describes either kind, because what a component can be configured with is the same question whichever
-it is. Declaring both is refused; a component is one thing.
+from a browser that is usually nowhere near the machine it runs on. Most components are one of the two
+for as long as they exist; some are whichever their deployment makes them. So there are three identity
+attributes — `[Leaf]`, `[Anchor]` and `[LeafOrAnchor]` — and **one shared body**: every group, floor
+source and field describes any of them, because what a component can be configured with is the same
+question whichever kind it is. Carrying two of the three is refused; a component states one thing about
+what it is.
 
 The kind is **not written into the descriptor**. The generator routes on the output file's suffix —
 `.leaf.json` or `.anchor.json` — and refuses one that disagrees with the identity attribute, so a
 component cannot reach the wrong directory without failing the build. Where the file is installed is
 what says which, and two records of one fact can disagree.
+
+A `[LeafOrAnchor]` component is described **twice**, into both suffixes beside each other, and the
+deploy installs the one its standing calls for while clearing the other. The build names one path and
+the second is derived from it, because two paths a build sets independently is two places to spell one
+id. The two files are identical but for the role sentence: a leaf's names the host it serves, and an
+anchor has no host, which is what `anchorRole` is for.
 
 This is **neither**. It deploys nowhere, has no `deploy/` directory and no systemd unit. It is a
 build-time dependency of components, consumed as a versioned `PackageReference` from the org's GitHub
@@ -51,7 +59,8 @@ package to every leaf, from the cache, with no error.
 | `build/*.props` `*.targets` | What a consuming leaf gets: the attribute source, `GenerateDocumentationFile`, and the `AfterTargets="Build"` generation step. |
 | `tests/Fixtures/SampleLeaf/` | A real compiled leaf covering every shape the scanner handles. |
 | `tests/Fixtures/SampleAnchor/` | The same, as an anchor — the fixture that keeps one shared body honest rather than coincidental. |
-| `tests/Fixtures/ConfusedComponent/` | Declares both identities, so the refusal is tested against a real assembly. |
+| `tests/Fixtures/ConfusedComponent/` | Declares two identities, so the refusal is tested against a real assembly. |
+| `tests/Fixtures/EitherComponent/` | Declares `[LeafOrAnchor]`, so being described both ways is tested against a real assembly. |
 | `tests/ComponentConfig.Tests/` | Generator, validator and settings-flattening tests. |
 
 ## The invariant this package exists to protect

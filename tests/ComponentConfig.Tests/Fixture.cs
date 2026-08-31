@@ -24,6 +24,12 @@ internal static class Fixture
     /// <summary>A component declaring both identities, which is one too many.</summary>
     public static string ConfusedAssembly => Metadata("ConfusedComponentAssembly");
 
+    /// <summary>A component whose kind its deployment decides, so it is described both ways.</summary>
+    public static string EitherAssembly => Metadata("EitherComponentAssembly");
+
+    /// <inheritdoc cref="EitherAssembly"/>
+    public static string EitherSettings => Metadata("EitherComponentSettings");
+
     public static string Golden(string name) => Path.Combine(Metadata("GoldenDirectory"), name);
 
     private static string Metadata(string key) =>
