@@ -35,6 +35,14 @@ internal sealed class LeafAttribute(string id, string displayName, string unit, 
     /// <summary><c>restart</c> or <c>reload</c>.</summary>
     public string ApplyMode { get; set; } = "restart";
 
+    /// <summary>
+    /// True for a component that is a cluster ANCHOR rather than one of a node's leaves. An anchor
+    /// serves one capability to the whole cluster and is a peer of the node it happens to sit beside,
+    /// so it belongs on no node's service board — it is reached as the member it is. It still ships a
+    /// descriptor, because what it can be configured with is worth describing wherever that is read.
+    /// </summary>
+    public bool Anchor { get; set; }
+
     /// <summary>True for a leaf whose configuration is readable but not editable from the panel.</summary>
     public bool ReadOnly { get; set; }
 

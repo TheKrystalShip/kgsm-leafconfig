@@ -73,6 +73,7 @@ internal sealed class MetadataScanner(
             DisplayName: Arg<string>(leaf, 1)!,
             Unit: Arg<string>(leaf, 2)!,
             Role: Arg<string>(leaf, 3)!,
+            Anchor: Named<bool>(leaf, Names.Args.Anchor),
             OnDemand: Named<bool>(leaf, Names.Args.OnDemand),
             ApplyMode: Named<string>(leaf, Names.Args.ApplyMode) ?? Names.ApplyModes.Restart,
             ReadOnly: Named<bool>(leaf, Names.Args.ReadOnly),

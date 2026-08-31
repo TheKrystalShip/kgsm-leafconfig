@@ -188,6 +188,20 @@ public class GeneratorTests
     }
 
     [Fact]
+    public void An_anchor_says_so_and_a_leaf_says_nothing()
+    {
+        // A cluster anchor serves one capability to the whole cluster and is a peer of the node it
+        // sits beside, so it belongs on no node's service board. The board reads this key to leave it
+        // off; absence is what a node's leaf looks like, and the sample fixture is one.
+        Descriptor leaf = Build().Descriptor;
+        Assert.False(leaf.Identity.Anchor);
+        Assert.DoesNotContain("\"anchor\"", Emitter.Render(leaf));
+
+        Descriptor anchor = leaf with { Identity = leaf.Identity with { Anchor = true } };
+        Assert.Contains("\"anchor\": true", Emitter.Render(anchor));
+    }
+
+    [Fact]
     public void A_leaf_that_drives_no_backend_emits_no_gpu_key()
     {
         // Absent, not an empty array: an empty one reads as a leaf that reaches a card and spends

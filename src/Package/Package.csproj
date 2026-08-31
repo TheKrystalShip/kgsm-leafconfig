@@ -7,7 +7,7 @@
     <PackageId>TheKrystalShip.KGSM.LeafConfig</PackageId>
     <Authors>Heisenberg</Authors>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-    <Version>2.3.0-dev.1</Version>
+    <Version>2.3.0-dev.2</Version>
     <Description>
       Declares a KGSM leaf's Control Panel configuration surface on its typed settings class, and
       generates the leaf config descriptor from it at build time. Build-only: the attributes are

@@ -26,6 +26,7 @@ internal static class Names
     /// <summary>Named attribute arguments. These match the property names in LeafConfigAttributes.cs.</summary>
     internal static class Args
     {
+        internal const string Anchor = "Anchor";
         internal const string OnDemand = "OnDemand";
         internal const string ApplyMode = "ApplyMode";
         internal const string ReadOnly = "ReadOnly";
@@ -120,6 +121,7 @@ internal static class Names
         internal const string DisplayName = "displayName";
         internal const string Unit = "unit";
         internal const string Role = "role";
+        internal const string Anchor = "anchor";
         internal const string OnDemand = "onDemand";
         internal const string ApplyMode = "applyMode";
         internal const string ReadOnly = "readOnly";

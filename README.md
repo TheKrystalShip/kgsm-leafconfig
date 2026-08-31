@@ -97,7 +97,7 @@ and the build names each one, so neither stays invisible.
 
 | Attribute | Where | What it declares |
 |---|---|---|
-| `[Leaf]` | assembly | id, display name, unit, role, `onDemand`, `applyMode`, `readOnly` |
+| `[Leaf]` | assembly | id, display name, unit, role, `anchor`, `onDemand`, `applyMode`, `readOnly` |
 | `[LeafGroup]` | assembly | a panel section and its order |
 | `[LeafFloorSource]` | assembly | where the leaf's own config comes from, lowest precedence first |
 | `[LeafSectionAssembly]` | assembly | another assembly this leaf's settings sections live in |

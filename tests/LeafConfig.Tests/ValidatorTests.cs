@@ -34,7 +34,7 @@ public class ValidatorTests
     }
 
     private static LeafIdentity Identity(string applyMode = "restart", bool readOnly = false, string? reason = null) =>
-        new("x", "X", "kgsm-x.service", "A leaf.", OnDemand: false, applyMode, readOnly, reason);
+        new("x", "X", "kgsm-x.service", "A leaf.", Anchor: false, OnDemand: false, applyMode, readOnly, reason);
 
     private static FieldDef Field(
         string key = "k",

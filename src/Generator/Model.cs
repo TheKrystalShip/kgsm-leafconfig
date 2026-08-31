@@ -6,6 +6,7 @@ internal sealed record LeafIdentity(
     string DisplayName,
     string Unit,
     string Role,
+    bool Anchor,
     bool OnDemand,
     string ApplyMode,
     bool ReadOnly,

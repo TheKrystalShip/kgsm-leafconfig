@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — `Anchor`, for a component that is a cluster member rather than a node's leaf
+
+An optional flag on `[Leaf]`, emitted as the descriptor's `anchor` key. An auth anchor serves one
+capability to the whole cluster and is a peer of the node it happens to sit beside, so it belongs on
+no node's service board — kgsm-api reads this key to leave it off, and the component is reached as
+the member it is. It still ships a descriptor, because what it can be configured with is worth
+describing wherever that is read.
+
+Omitted for a leaf that is not one, the same way `readOnly` is: absence is what a node's leaf looks
+like, and every descriptor but an anchor's is one. A new optional leaf-level key is additive within
+`schemaVersion: 1`, so the version is unchanged and every existing reader ignores it.
+
 ### Added — `[LeafGpuBackend]`, for GPU spent through a unit the leaf does not own
 
 An assembly-level attribute naming a systemd unit whose GPU usage is attributed to the declaring

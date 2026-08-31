@@ -49,6 +49,11 @@ internal static class Emitter
         writer.WriteString(Names.Json.DisplayName, identity.DisplayName);
         writer.WriteString(Names.Json.Unit, identity.Unit);
         writer.WriteString(Names.Json.Role, identity.Role);
+        // Omitted when false, like readOnly below: absence is what a node's leaf looks like, and
+        // every descriptor but an anchor's is one.
+        if (identity.Anchor)
+            writer.WriteBoolean(Names.Json.Anchor, true);
+
         writer.WriteBoolean(Names.Json.OnDemand, identity.OnDemand);
         writer.WriteString(Names.Json.ApplyMode, identity.ApplyMode);
 
