@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Generator/Generator.csproj" />
     <Project Path="src/Package/Package.csproj" />
+    <Project Path="src/Surface/Surface.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ComponentConfig.Tests/ComponentConfig.Tests.csproj" />

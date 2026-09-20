@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>TheKrystalShip.KGSM.ComponentSurface</RootNamespace>
+    <AssemblyName>TheKrystalShip.KGSM.ComponentSurface</AssemblyName>
+
+    <PackageId>TheKrystalShip.KGSM.ComponentSurface</PackageId>
+    <Authors>Heisenberg</Authors>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <Version>1.0.0-dev.1</Version>
+    <Description>
+      Serves a KGSM component's own surface: it reads back the descriptor its build generated, projects
+      it with the host's deploy floors and the overrides in force, validates and writes a change, reads
+      its unit's journal, and restarts it. Transport-free — a leaf serves this over the socket it
+      already has and an anchor over HTTP, and neither difference reaches this library.
+    </Description>
+
+    <!-- Consumed by Native-AOT components, so it must survive trimming with no reflection: JSON goes
+         through a source-generated context and nothing here loads a type by name. -->
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsTrimmable>true</IsTrimmable>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The wire shapes a component answers with. Packed by kgsm-api because it produces the Control
+         Panel's DTO graph, and shipped with its own serialization so a consumer cannot hold the shapes
+         while spelling them differently. -->
+    <PackageReference Include="TheKrystalShip.KGSM.Api.Contracts" Version="1.0.0-dev.11" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+
+</Project>

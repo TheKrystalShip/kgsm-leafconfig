@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Generator/Generator.csproj" />
+    <ProjectReference Include="../../src/Surface/Surface.csproj" />
 
     <!-- Built, not referenced: the tests read its compiled metadata from disk, which is exactly what
          the generator does to a real leaf. -->

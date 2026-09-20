@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — a component serves its own surface (ComponentSurface 1.0.0-dev.1)
+
+`TheKrystalShip.KGSM.ComponentSurface`, a second package from this repo: the descriptor's **reader**,
+beside the generator that writes it. It reads a component's own descriptor, projects it with the
+host's deploy floors and the overrides in force, validates and writes a change, reads its unit's
+journal and restarts it.
+
+Here rather than anywhere else because the format's schema had one writer and independent readers,
+and nothing failed when they disagreed. `SurfaceRoundTripTests` emits from the compiled `SampleLeaf`
+fixture and parses the bytes it produced, so a key added to one half and not the other fails a test
+instead of reaching a panel as a control that does nothing.
+
+A separate package because `TheKrystalShip.KGSM.ComponentConfig` ships no assembly by construction —
+`IncludeBuildOutput=false`, `SuppressDependenciesWhenPacking`, `DevelopmentDependency` — and giving it
+one would put a runtime library into every AOT component that wants only the attributes.
+
+Transport-free: the journal follow hands out a channel of lines and frames nothing, so a leaf serves
+this over the socket it already has and an anchor over HTTP, and neither difference reaches the
+library. AOT-compatible and trimmable, with descriptor reading through a source-generated context.
+
 ### Added — a component whose kind its deployment decides
 
 `[LeafOrAnchor]`, a third identity attribute beside `[Leaf]` and `[Anchor]`, for a component that is a

@@ -5,9 +5,19 @@ cross-cutting ecosystem rules; this file covers what is specific to this package
 
 ## What this is
 
-`TheKrystalShip.KGSM.ComponentConfig` — the attributes a KGSM **component** declares its Control Panel
-configuration surface with, plus the build-time generator that writes its descriptor from them.
-`README.md` is the usage reference and the attribute vocabulary; read it first.
+This repo owns the config descriptor's **rules**, and ships both halves of them as two packages:
+
+- **`TheKrystalShip.KGSM.ComponentConfig`** — the attributes a KGSM **component** declares its Control
+  Panel configuration surface with, plus the build-time generator that writes its descriptor from them.
+  Build-only: it ships no assembly at all. `README.md` is the usage reference and the attribute
+  vocabulary; read it first.
+- **`TheKrystalShip.KGSM.ComponentSurface`** — the reader. A component uses it to serve its own surface:
+  read back the descriptor its build generated, project it with the host's deploy floors and the
+  overrides in force, validate and write a change, read its unit's journal, restart it.
+
+They are in one repo because the format's schema would otherwise have a writer and independent readers
+with nothing failing when they disagree. `SurfaceRoundTripTests` emits from the compiled fixture and
+parses the bytes it produced, which is the check that cannot exist while the two live apart.
 
 A component is a **leaf** or an **anchor**, and the difference is what it belongs to. A leaf is run by
 one node, described on that node's disk, and administered as one of that node's services. An anchor
@@ -30,9 +40,10 @@ the second is derived from it, because two paths a build sets independently is t
 id. The two files are identical but for the role sentence: a leaf's names the host it serves, and an
 anchor has no host, which is what `anchorRole` is for.
 
-This is **neither**. It deploys nowhere, has no `deploy/` directory and no systemd unit. It is a
-build-time dependency of components, consumed as a versioned `PackageReference` from the org's GitHub
-Packages feed the same way `kgsm-lib` is.
+This repo is **neither** a leaf nor an anchor. It deploys nowhere, has no `deploy/` directory and no
+systemd unit. Both packages are consumed as versioned `PackageReference`s from the org's GitHub Packages
+feed the same way `kgsm-lib` is — `ComponentConfig` at build time only, `ComponentSurface` at runtime by
+whichever components serve their own configuration.
 
 **Authority for the descriptor *format* is `../leaf-config-descriptor.md`.** This repo implements a
 producer for it; when the two disagree, that document wins and this code is the bug.
@@ -45,9 +56,10 @@ dotnet test kgsm-componentconfig.slnx
 ../scripts/publish-packages.sh kgsm-componentconfig     # pack + push to the org's feed
 ```
 
-A consumer resolves the package by `id+version` and NuGet caches on that pair, so **bump
-`<Version>` in `src/Package/Package.csproj` for any change** — a same-version repack serves the old
-package to every leaf, from the cache, with no error.
+A consumer resolves a package by `id+version` and NuGet caches on that pair, so **bump the `<Version>`
+of whichever package changed** — `src/Package/Package.csproj` or `src/Surface/Surface.csproj` — for any
+change. A same-version repack serves the old package to every consumer, from the cache, with no error.
+The two version independently: they are separate artifacts with separate consumers.
 
 ## Layout
 
@@ -55,17 +67,18 @@ package to every leaf, from the cache, with no error.
 |---|---|
 | `src/Attributes/` | The attribute definitions. Plain source, no project — packed into `build/src/` and compiled into each leaf by the package's props file. |
 | `src/Generator/` | The tool. A plain JIT console app (`componentdescgen`), packed into `tools/net10.0/`. |
-| `src/Package/` | Packaging only. Produces the nupkg; builds nothing of its own. |
+| `src/Package/` | Packaging only. Produces the `ComponentConfig` nupkg; builds nothing of its own. |
+| `src/Surface/` | The reader — descriptor parse, floors, override file, config projection + apply, journal read + follow, unit restart. A normal AOT-compatible library, published as `ComponentSurface`. |
 | `build/*.props` `*.targets` | What a consuming leaf gets: the attribute source, `GenerateDocumentationFile`, and the `AfterTargets="Build"` generation step. |
 | `tests/Fixtures/SampleLeaf/` | A real compiled leaf covering every shape the scanner handles. |
 | `tests/Fixtures/SampleAnchor/` | The same, as an anchor — the fixture that keeps one shared body honest rather than coincidental. |
 | `tests/Fixtures/ConfusedComponent/` | Declares two identities, so the refusal is tested against a real assembly. |
 | `tests/Fixtures/EitherComponent/` | Declares `[LeafOrAnchor]`, so being described both ways is tested against a real assembly. |
-| `tests/ComponentConfig.Tests/` | Generator, validator and settings-flattening tests. |
+| `tests/ComponentConfig.Tests/` | Generator, validator and settings-flattening tests, plus the descriptor's round trip through `src/Surface/`. |
 
-## The invariant this package exists to protect
+## The invariant the ComponentConfig package exists to protect
 
-**A component gains nothing at runtime from being described.** Three decisions hold that up, and each
+**A component gains nothing at runtime from being DESCRIBED.** Three decisions hold that up, and each
 one is load-bearing:
 
 1. **The attributes ship as source, not as an assembly.** There is no reference to resolve, trim or
@@ -81,6 +94,11 @@ one is load-bearing:
 Verified on `kgsm-monitor`: zero ILC warnings, no `System.Reflection.MetadataLoadContext.dll` in the
 publish output, and none of the descriptor's strings in the native binary. **If you change the
 packaging, re-check all three** — the failure is silent, and it lands in another repo.
+
+Serving a surface is a separate act with a separate cost, which is why `ComponentSurface` is a separate
+package: a component that only wants to be described references neither it nor anything it brings. What
+it does share is the constraint — it is trimmable and AOT-compatible, and reads the descriptor through a
+source-generated context, so a Native-AOT component can serve its own configuration.
 
 ## Gotchas
 
@@ -107,7 +125,8 @@ packaging, re-check all three** — the failure is silent, and it lands in anoth
 
 ## Version tracking
 
-- **Version source:** `<Version>` in `src/Package/Package.csproj`.
+- **Version sources:** `<Version>` in `src/Package/Package.csproj` (ComponentConfig) and in
+  `src/Surface/Surface.csproj` (ComponentSurface). They move independently.
 - Bump for any change; consumers pin an exact version and NuGet caches by `id+version`.
 - Update `CHANGELOG.md` under `## [Unreleased]` for every meaningful change.
 
