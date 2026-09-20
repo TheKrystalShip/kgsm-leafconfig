@@ -182,18 +182,19 @@ public sealed class ComponentConfigService(
         if (after is null)
             return (null, null);
 
+        // Whether systemd took the job is the whole of what this can honestly report: the process that
+        // would measure its own health after the restart is the one being restarted. So the outcome
+        // separates "in force, or becoming so" from "written and NOT in force", and the health stays
+        // unknown either way rather than claiming a verdict nobody took.
         bool restarting = unit.ScheduleRestart(descriptor.Unit);
         return (new ComponentApplyOutcome(
             new ComponentConfigApplyResult(
-                ComponentConfigOutcome.Applied,
-                // Unknown, and honestly so: the process that would measure its own health after the
-                // restart is the one being restarted.
-                new ComponentConfigHealth(CapabilityStatus.Unknown, restarting
-                    ? "Restarting to pick the change up."
-                    : "Written, but the restart was refused — the change is not in force."),
+                restarting ? ComponentConfigOutcome.Applied : ComponentConfigOutcome.WrittenNotApplied,
+                new ComponentConfigHealth(CapabilityStatus.Unknown, null),
                 restarting
                     ? "Applied. This component is restarting to pick it up."
-                    : "Written to the override file, but systemd refused the restart, so it is not in force.",
+                    : "Written to the override file, but the restart was refused — it is not in force. "
+                      + "Restart " + descriptor.Unit + " by hand to apply it.",
                 after),
             restarting), null);
     }

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — a component reports its own unit (ComponentSurface 1.0.0-dev.3)
+
+`ComponentUnitReader` answers what systemd says about the component's own unit, as the
+`ComponentService` row every Services surface renders — state, sub-state, enablement, when it last
+became active, its main pid and the memory charged to that process's own cgroup. A node's API reads
+this for each of its leaves; a component with no node above it reads its own.
+
+Memory is the main process's cgroup rather than systemd's `MemoryCurrent`, which is the unit
+subtree's total and charges a supervised workload to its supervisor. `not-found` and `masked` override
+the active state, because a unit that is not installed is not a unit that is stopped.
+
+### Changed — an apply that cannot restart says so (ComponentSurface 1.0.0-dev.2)
+
+An apply whose restart systemd refuses reports `ComponentConfigOutcome.WrittenNotApplied` rather than
+`Applied`. The change is on disk and is not in force, which is the opposite claim about what is
+running, and a person reading "applied" would stop looking. Takes `Api.Contracts 1.0.0-dev.12` for
+the word.
+
 ### Added — a component serves its own surface (ComponentSurface 1.0.0-dev.1)
 
 `TheKrystalShip.KGSM.ComponentSurface`, a second package from this repo: the descriptor's **reader**,
