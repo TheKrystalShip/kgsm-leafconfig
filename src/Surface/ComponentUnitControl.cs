@@ -63,6 +63,98 @@ public sealed class ComponentUnitControl(ILogger<ComponentUnitControl> logger)
     }
 
     /// <summary>
+    /// Whether this host actually loads the override file back into the unit — the systemd drop-in
+    /// carrying <c>EnvironmentFile=</c> for it.
+    /// </summary>
+    /// <remarks>
+    /// <b>Readable and editable are separate questions.</b> A descriptor makes a component's
+    /// configuration visible with full provenance; changing it additionally needs the host to have
+    /// wired the delivery. Without the drop-in an apply writes a file nothing reads and then restarts
+    /// into exactly the values it started with — a change reported as applied that changes nothing,
+    /// which is the format's worst failure. So it is checked rather than assumed, and the surface
+    /// reports itself locked with the reason instead.
+    /// <para>
+    /// The check is the override PATH appearing in an <c>EnvironmentFile=</c> line of the unit or one
+    /// of its drop-ins, not a drop-in filename: the path is the thing that has to match, and a
+    /// convention about names would pass for a drop-in pointing somewhere else.
+    /// </para>
+    /// </remarks>
+    public bool CanDeliver(string unit, string overridePath, out string? why)
+    {
+        if (string.IsNullOrWhiteSpace(overridePath))
+        {
+            why = "This component names no override file, so a change could not be delivered.";
+            return false;
+        }
+
+        string target;
+        try { target = Path.GetFullPath(overridePath); }
+        catch { target = overridePath; }
+
+        foreach (string file in UnitFiles(unit))
+        {
+            string[] lines;
+            try { lines = File.ReadAllLines(file); }
+            catch { continue; }
+
+            foreach (string raw in lines)
+            {
+                string line = raw.Trim();
+                if (!line.StartsWith("EnvironmentFile=", StringComparison.Ordinal))
+                    continue;
+
+                // A leading '-' means "absent is fine", which is a statement about the file rather
+                // than about which file it is.
+                string named = line["EnvironmentFile=".Length..].Trim().TrimStart('-');
+                string resolved;
+                try { resolved = Path.GetFullPath(named); }
+                catch { resolved = named; }
+
+                if (string.Equals(resolved, target, StringComparison.Ordinal))
+                {
+                    why = null;
+                    return true;
+                }
+            }
+        }
+
+        why = $"This host does not load {overridePath} into {unit}, so a change would be written and "
+            + "never read. Run this component's deploy/setup.sh to install the drop-in that does.";
+        return false;
+    }
+
+    // The unit and its drop-ins, across every root systemd reads, in systemd's own order — a package
+    // leaves them in /usr/lib, a deploy script in /etc, and either is a host that is wired.
+    private static IEnumerable<string> UnitFiles(string unit)
+    {
+        foreach (string dir in UnitDirs)
+        {
+            string path = Path.Combine(dir, unit);
+            if (File.Exists(path))
+                yield return path;
+
+            string dropIns = Path.Combine(dir, unit + ".d");
+            if (!Directory.Exists(dropIns))
+                continue;
+
+            string[] confs;
+            try { confs = Directory.GetFiles(dropIns, "*.conf"); }
+            catch { continue; }
+
+            foreach (string conf in confs.OrderBy(f => f, StringComparer.Ordinal))
+                yield return conf;
+        }
+    }
+
+    private static readonly string[] UnitDirs =
+    [
+        "/etc/systemd/system",
+        "/run/systemd/system",
+        "/usr/lib/systemd/system",
+        "/lib/systemd/system",
+    ];
+
+    /// <summary>
     /// Queue the restart, so it happens after the answer has left. Returns whether systemd accepted the
     /// job — false is reported to the caller rather than swallowed, because a change that is written and
     /// not in force is a state a person needs to know they are in.

@@ -10,7 +10,7 @@
     <PackageId>TheKrystalShip.KGSM.ComponentSurface</PackageId>
     <Authors>Heisenberg</Authors>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-    <Version>1.0.0-dev.3</Version>
+    <Version>1.0.0-dev.4</Version>
     <Description>
       Serves a KGSM component's own surface: it reads back the descriptor its build generated, projects
       it with the host's deploy floors and the overrides in force, validates and writes a change, reads

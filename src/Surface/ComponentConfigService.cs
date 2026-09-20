@@ -91,8 +91,17 @@ public sealed class ComponentConfigService(
         // change there means restarting the process serving the request. Its own words are carried,
         // rather than a sentence restated here that would drift from them.
         (bool declaredReadOnly, string? declaredReason) = descriptors.ReadOnlyDeclaration();
-        bool restartable = unit.CanRestart(descriptor.Unit, out string? why);
-        bool editable = restartable && !declaredReadOnly;
+        bool restartable = unit.CanRestart(descriptor.Unit, out string? noRestart);
+        bool deliverable = unit.CanDeliver(descriptor.Unit, overrides.Path, out string? noDelivery);
+        bool editable = restartable && deliverable && !declaredReadOnly;
+
+        // The reason names the first thing standing in the way, and the component's own words win:
+        // a surface its build declared read-only is not a host that is unwired.
+        string? why =
+            declaredReadOnly ? declaredReason
+            : !restartable ? noRestart
+            : !deliverable ? noDelivery
+            : null;
 
         return new ComponentConfigView(
             Id: descriptor.Id,
@@ -101,7 +110,7 @@ public sealed class ComponentConfigService(
             Fields: fields,
             Groups: [.. descriptor.Groups.Select(g => new ComponentConfigGroup(g.Id, g.Label, g.Order))],
             Editable: editable,
-            EditableReason: editable ? null : declaredReadOnly ? declaredReason : why,
+            EditableReason: why,
             ApplyMode: descriptor.ApplyMode,
             FromDescriptor: true);
     }
@@ -116,9 +125,6 @@ public sealed class ComponentConfigService(
         ComponentDescriptor? descriptor = descriptors.Current();
         if (descriptor is null)
             return (null, null);
-
-        if (Read() is { Editable: false, EditableReason: var locked })
-            return (null, locked ?? "This component's configuration cannot be changed on this host.");
 
         IReadOnlyList<string> reset = update.Reset ?? [];
         IReadOnlyDictionary<string, string> values =
@@ -144,6 +150,13 @@ public sealed class ComponentConfigService(
             if (descriptor.Field(key) is null)
                 return (null, $"'{key}' is not a key this component declares");
         }
+
+        // The request is checked first and the HOST second, because the two are different statements
+        // and the first is true wherever it is sent: a key this component does not declare is wrong on
+        // a wired host too. Only once the request is sound does it matter whether this host could
+        // deliver it.
+        if (Read() is { Editable: false, EditableReason: var locked })
+            return (null, locked ?? "This component's configuration cannot be changed on this host.");
 
         var rows = new Dictionary<string, string>(overrides.Read(), StringComparer.Ordinal);
         var before = new Dictionary<string, string>(rows, StringComparer.Ordinal);

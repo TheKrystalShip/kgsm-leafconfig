@@ -286,6 +286,34 @@ public class SurfaceRoundTripTests : IDisposable
         Assert.Contains(choice.Key, error);
     }
 
+    // ── readable is not editable ────────────────────────────────────────────
+
+    [Fact]
+    public void A_host_that_does_not_load_the_override_reports_the_surface_locked()
+    {
+        // The fixture's unit is not on this machine, so nothing loads its override file — which is
+        // exactly the host that must not be offered an edit. The values are still readable.
+        ComponentConfigView view = Service(Options()).Read()!;
+
+        Assert.False(view.Editable);
+        Assert.Contains("never read", view.EditableReason);
+        Assert.NotEmpty(view.Fields);
+    }
+
+    [Fact]
+    public void An_apply_against_an_unwired_host_is_refused_before_anything_is_written()
+    {
+        ComponentSurfaceOptions options = Options();
+
+        (ComponentApplyOutcome? outcome, string? error) = Service(options).Apply(
+            new ComponentConfigUpdate(
+                new Dictionary<string, string>(StringComparer.Ordinal) { ["port"] = "9001" }, null));
+
+        Assert.Null(outcome);
+        Assert.Contains("never read", error);
+        Assert.False(File.Exists(options.OverridePath));
+    }
+
     // ── secrets ─────────────────────────────────────────────────────────────
 
     [Fact]

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — readable is not editable (ComponentSurface 1.0.0-dev.4)
+
+`ComponentUnitControl.CanDeliver` checks that a systemd drop-in actually loads the override file back
+into the unit, and the surface reports itself locked with the reason when nothing does. Without it an
+apply writes a file nothing reads and restarts into exactly the values it started with — a change
+reported as applied that changed nothing.
+
+The check is the override PATH appearing in an `EnvironmentFile=` line of the unit or one of its
+drop-ins, not a drop-in filename: the path is the thing that has to match.
+
+An apply validates the REQUEST first and judges the host second, because a key the component does not
+declare is wrong wherever it is sent.
+
 ### Added — a component reports its own unit (ComponentSurface 1.0.0-dev.3)
 
 `ComponentUnitReader` answers what systemd says about the component's own unit, as the
