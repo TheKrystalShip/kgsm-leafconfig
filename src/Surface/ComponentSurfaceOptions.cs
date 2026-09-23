@@ -22,4 +22,12 @@ namespace TheKrystalShip.KGSM.ComponentSurface;
 /// systemd drop-in reads back with <c>EnvironmentFile=-</c>. <b>The file is the store</b> — the writer
 /// and the reader are the same process, so a second copy of what is overridden would only be a second
 /// thing to disagree with the file.</param>
-public sealed record ComponentSurfaceOptions(string DescriptorPath, string OverridePath);
+/// <param name="CommandsPath">The command manifest this component's deploy installed beside its
+/// descriptor, or null for a component that declares no commands. Passed through to whoever asks
+/// rather than modelled: the manifest is a file format a component ships on disk, and a typed copy
+/// here would be a second statement of the same schema, free to disagree with the file the build
+/// wrote.</param>
+public sealed record ComponentSurfaceOptions(
+    string DescriptorPath,
+    string OverridePath,
+    string? CommandsPath = null);

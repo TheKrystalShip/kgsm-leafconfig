@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>TheKrystalShip.KGSM.ComponentSurface.Http</RootNamespace>
+    <AssemblyName>TheKrystalShip.KGSM.ComponentSurface.Http</AssemblyName>
+
+    <PackageId>TheKrystalShip.KGSM.ComponentSurface.Http</PackageId>
+    <Authors>Heisenberg</Authors>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <Version>1.0.0-dev.2</Version>
+    <Description>
+      Mounts a KGSM component's own surface on an HTTP endpoint: its configuration, its unit, its
+      journal and the commands it declares, at the same routes whoever is serving them. A leaf mounts
+      it on the unix socket it already has and the node's API relays; an anchor mounts it on its member
+      address. The rules underneath are TheKrystalShip.KGSM.ComponentSurface, which knows about neither.
+    </Description>
+
+    <!-- Consumed by Native-AOT components, so every response is written through a source-generated
+         context and nothing here asks the host to have configured JSON options. -->
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsTrimmable>true</IsTrimmable>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Surface/Surface.csproj" />
+  </ItemGroup>
+
+</Project>

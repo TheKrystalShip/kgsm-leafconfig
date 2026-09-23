@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — the surface mounted on HTTP, and the commands a component declares (ComponentSurface 1.0.0-dev.5, ComponentSurface.Http 1.0.0-dev.2)
+
+`TheKrystalShip.KGSM.ComponentSurface.Http` maps a component's own surface onto any route group:
+`/config` (GET, PUT), `/system`, `/logs`, `/logs/stream` and `/commands`, every response written through
+a source-generated context so a Native AOT component can mount it. `AddComponentSurface` registers every
+service those routes need in one call, from a fixed `ComponentSurfaceOptions` or from one resolved out of
+the component's own configuration. The gate in front is the mounting component's: an anchor filters on
+its own session, a leaf on its socket.
+
+`ComponentCommandManifest` serves the command manifest a component's deploy installed, verbatim once it
+parses, as `None` when there is no file and `Unreadable` with a reason when there is one that cannot be
+served. `ComponentSurfaceOptions.CommandsPath` names it. `ComponentSurfacePaths` resolves a component's
+descriptor and manifest for the standing its deploy installed it in, reading the anchors directory
+before the leaves directory, with a configured path always winning.
+
 ### Changed — readable is not editable (ComponentSurface 1.0.0-dev.4)
 
 `ComponentUnitControl.CanDeliver` checks that a systemd drop-in actually loads the override file back
