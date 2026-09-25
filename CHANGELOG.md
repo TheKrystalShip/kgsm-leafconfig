@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — a settings file's booleans are spelled the way every other tier spells one (ComponentSurface 1.0.0-dev.6, ComponentSurface.Http 1.0.0-dev.3)
+
+`ComponentFloorReader` flattens a JSON `true` to `"true"` rather than `"True"`. Every tier of a
+component's configuration is a string by the time a surface renders it, and a surface decides which
+tier a value came from — and whether a switch is on — by comparing them. A floor of `"True"` against a
+coded default of `"true"` is two different values where the component has one, which draws a switch
+that is ON as off and names the wrong tier as the source.
+
+`FloorSpellingTests` pins the spelling of a boolean, a nested boolean, and the numbers and strings that
+keep the spelling the file gave them.
+
+`ComponentSurface.Http` carries the version through; it holds no change of its own.
+
 ### Added — the surface mounted on HTTP, and the commands a component declares (ComponentSurface 1.0.0-dev.5, ComponentSurface.Http 1.0.0-dev.2)
 
 `TheKrystalShip.KGSM.ComponentSurface.Http` maps a component's own surface onto any route group:

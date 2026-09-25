@@ -93,6 +93,17 @@ public sealed class ComponentFloorReader(ComponentSurfaceOptions options, ILogge
             case JsonValueKind.Null:
                 break;
 
+            // A JSON boolean, spelled the way the descriptor and every other tier spell one. Left to
+            // JsonElement.ToString() it arrives as "True", which is not a value any component's parser
+            // writes and not what the field's default says — so a surface comparing this floor against
+            // a default of "true" finds them different and draws a switch that is ON as off. That is a
+            // surface misreporting what the component is running with, which is the one thing the
+            // provenance view exists not to do.
+            case JsonValueKind.True or JsonValueKind.False:
+                if (prefix.Length > 0)
+                    into[prefix] = element.ValueKind == JsonValueKind.True ? "true" : "false";
+                break;
+
             default:
                 if (prefix.Length > 0)
                     into[prefix] = element.ToString();

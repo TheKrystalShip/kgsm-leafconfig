@@ -10,7 +10,7 @@
     <PackageId>TheKrystalShip.KGSM.ComponentSurface.Http</PackageId>
     <Authors>Heisenberg</Authors>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-    <Version>1.0.0-dev.2</Version>
+    <Version>1.0.0-dev.3</Version>
     <Description>
       Mounts a KGSM component's own surface on an HTTP endpoint: its configuration, its unit, its
       journal and the commands it declares, at the same routes whoever is serving them. A leaf mounts
