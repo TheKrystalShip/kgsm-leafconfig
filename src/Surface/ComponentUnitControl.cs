@@ -35,7 +35,9 @@ namespace TheKrystalShip.KGSM.ComponentSurface;
 /// effect.
 /// </para>
 /// </remarks>
-public sealed class ComponentUnitControl(ILogger<ComponentUnitControl> logger)
+public sealed class ComponentUnitControl(
+    ComponentSurfaceOptions options,
+    ILogger<ComponentUnitControl> logger)
 {
     private const string Systemctl = "/usr/bin/systemctl";
 
@@ -123,36 +125,16 @@ public sealed class ComponentUnitControl(ILogger<ComponentUnitControl> logger)
         return false;
     }
 
-    // The unit and its drop-ins, across every root systemd reads, in systemd's own order — a package
-    // leaves them in /usr/lib, a deploy script in /etc, and either is a host that is wired.
-    private static IEnumerable<string> UnitFiles(string unit)
+    // The unit systemd would read and every drop-in applying to it, in systemd's own order. One
+    // fragment, because systemd takes the highest-precedence one and shadows the rest.
+    private IEnumerable<string> UnitFiles(string unit)
     {
-        foreach (string dir in UnitDirs)
-        {
-            string path = Path.Combine(dir, unit);
-            if (File.Exists(path))
-                yield return path;
+        if (ComponentUnitPaths.Fragment(unit, options.UnitDirectory) is { } fragment)
+            yield return fragment;
 
-            string dropIns = Path.Combine(dir, unit + ".d");
-            if (!Directory.Exists(dropIns))
-                continue;
-
-            string[] confs;
-            try { confs = Directory.GetFiles(dropIns, "*.conf"); }
-            catch { continue; }
-
-            foreach (string conf in confs.OrderBy(f => f, StringComparer.Ordinal))
-                yield return conf;
-        }
+        foreach (string conf in ComponentUnitPaths.DropIns(unit, options.UnitDirectory))
+            yield return conf;
     }
-
-    private static readonly string[] UnitDirs =
-    [
-        "/etc/systemd/system",
-        "/run/systemd/system",
-        "/usr/lib/systemd/system",
-        "/lib/systemd/system",
-    ];
 
     /// <summary>
     /// Queue the restart, so it happens after the answer has left. Returns whether systemd accepted the

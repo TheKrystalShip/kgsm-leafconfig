@@ -27,7 +27,13 @@ namespace TheKrystalShip.KGSM.ComponentSurface;
 /// rather than modelled: the manifest is a file format a component ships on disk, and a typed copy
 /// here would be a second statement of the same schema, free to disagree with the file the build
 /// wrote.</param>
+/// <param name="UnitDirectory">One unit-file directory to search instead of systemd's own roots. Blank
+/// or null means the standard set, which is the right answer on any provisioned host — a unit lands in
+/// <c>/usr/lib</c> from a package and in <c>/etc</c> from a deploy script, and this library cannot know
+/// which. Naming one is for a host that keeps its units somewhere no root covers, and for a test that
+/// needs a unit it can write.</param>
 public sealed record ComponentSurfaceOptions(
     string DescriptorPath,
     string OverridePath,
-    string? CommandsPath = null);
+    string? CommandsPath = null,
+    string? UnitDirectory = null);

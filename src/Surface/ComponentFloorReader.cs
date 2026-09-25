@@ -33,14 +33,6 @@ public sealed record ComponentFloor(IReadOnlyDictionary<string, string> Values, 
 /// </remarks>
 public sealed class ComponentFloorReader(ComponentSurfaceOptions options, ILogger<ComponentFloorReader> logger)
 {
-    private static readonly string[] UnitDirs =
-    [
-        "/etc/systemd/system",
-        "/run/systemd/system",
-        "/usr/lib/systemd/system",
-        "/lib/systemd/system",
-    ];
-
     /// <summary>
     /// Env name → the value this host's deploy files set it to, and whether every declared source was
     /// actually read.
@@ -175,8 +167,12 @@ public sealed class ComponentFloorReader(ComponentSurfaceOptions options, ILogge
         foreach (string line in lines)
         {
             string trimmed = line.Trim();
-            if (trimmed.Length == 0 || trimmed[0] == '#')
+            if (trimmed.Length == 0 || trimmed[0] == '#' || trimmed[0] == ';')
                 continue;
+
+            // An env file written to be sourceable by a shell as well as read by systemd.
+            if (trimmed.StartsWith("export ", StringComparison.Ordinal))
+                trimmed = trimmed["export ".Length..].TrimStart();
 
             int eq = trimmed.IndexOf('=');
             if (eq <= 0)
@@ -186,6 +182,54 @@ public sealed class ComponentFloorReader(ComponentSurfaceOptions options, ILogge
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// The assignments on one <c>Environment=</c> line: whitespace-separated, each optionally quoted so
+    /// a value containing a space stays whole.
+    /// </summary>
+    private static IEnumerable<(string Key, string Value)> SplitAssignments(string rest)
+    {
+        foreach (string token in Tokenize(rest))
+        {
+            int eq = token.IndexOf('=');
+            if (eq <= 0)
+                continue;
+            yield return (token[..eq], Unquote(token[(eq + 1)..]));
+        }
+    }
+
+    private static List<string> Tokenize(string s)
+    {
+        var tokens = new List<string>();
+        var current = new System.Text.StringBuilder();
+        char quote = '\0';
+
+        foreach (char c in s)
+        {
+            if (quote != '\0')
+            {
+                if (c == quote) quote = '\0';
+                else current.Append(c);
+            }
+            else if (c is '"' or '\'')
+            {
+                quote = c;
+            }
+            else if (char.IsWhiteSpace(c))
+            {
+                if (current.Length > 0) { tokens.Add(current.ToString()); current.Clear(); }
+            }
+            else
+            {
+                current.Append(c);
+            }
+        }
+
+        if (current.Length > 0)
+            tokens.Add(current.ToString());
+
+        return tokens;
     }
 
     /// <summary>
@@ -201,27 +245,18 @@ public sealed class ComponentFloorReader(ComponentSurfaceOptions options, ILogge
     /// </returns>
     private bool ReadUnit(string unitName, Dictionary<string, string> into)
     {
-        bool found = false;
-        bool complete = true;
+        // One fragment, then every drop-in, in systemd's own order. Reading a fragment from each root
+        // would merge values out of a unit systemd has shadowed and is not running.
+        string? fragment = ComponentUnitPaths.Fragment(unitName, options.UnitDirectory);
+        if (fragment is null)
+            return false;
 
-        foreach (string dir in UnitDirs)
-        {
-            string unit = Path.Combine(dir, unitName);
-            if (File.Exists(unit))
-            {
-                found = true;
-                complete &= ReadUnitFile(unit, into);
-            }
+        bool complete = ReadUnitFile(fragment, into);
 
-            string dropInDir = Path.Combine(dir, unitName + ".d");
-            if (!Directory.Exists(dropInDir))
-                continue;
+        foreach (string conf in ComponentUnitPaths.DropIns(unitName, options.UnitDirectory))
+            complete &= ReadUnitFile(conf, into);
 
-            foreach (string conf in Directory.GetFiles(dropInDir, "*.conf").OrderBy(f => f, StringComparer.Ordinal))
-                complete &= ReadUnitFile(conf, into);
-        }
-
-        return found && complete;
+        return complete;
     }
 
     private bool ReadUnitFile(string path, Dictionary<string, string> into)
@@ -242,12 +277,12 @@ public sealed class ComponentFloorReader(ComponentSurfaceOptions options, ILogge
             if (trimmed.Length == 0 || trimmed[0] == '#' || trimmed[0] == ';')
                 continue;
 
+            // systemd allows several assignments on one Environment= line, each optionally quoted, so
+            // reading only the first would drop every key after it.
             if (trimmed.StartsWith("Environment=", StringComparison.Ordinal))
             {
-                string assignment = trimmed["Environment=".Length..].Trim();
-                int eq = assignment.IndexOf('=');
-                if (eq > 0)
-                    into[assignment[..eq].Trim()] = Unquote(assignment[(eq + 1)..].Trim());
+                foreach ((string key, string value) in SplitAssignments(trimmed["Environment=".Length..]))
+                    into[key] = value;
                 continue;
             }
 

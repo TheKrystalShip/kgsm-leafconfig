@@ -204,7 +204,7 @@ public class FloorCompletenessTests : IDisposable
             new ComponentDescriptorStore(options, NullLogger<ComponentDescriptorStore>.Instance),
             new ComponentOverrideStore(options, NullLogger<ComponentOverrideStore>.Instance),
             new ComponentFloorReader(options, NullLogger<ComponentFloorReader>.Instance),
-            new ComponentUnitControl(NullLogger<ComponentUnitControl>.Instance),
+            new ComponentUnitControl(options, NullLogger<ComponentUnitControl>.Instance),
             NullLogger<ComponentConfigService>.Instance);
 
         return service.Read()!.Fields.Single(f => f.Key == "port");

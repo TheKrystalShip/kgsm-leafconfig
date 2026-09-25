@@ -56,7 +56,7 @@ public class SurfaceRoundTripTests : IDisposable
             store,
             new ComponentOverrideStore(options, NullLogger<ComponentOverrideStore>.Instance),
             new ComponentFloorReader(options, NullLogger<ComponentFloorReader>.Instance),
-            new ComponentUnitControl(NullLogger<ComponentUnitControl>.Instance),
+            new ComponentUnitControl(options, NullLogger<ComponentUnitControl>.Instance),
             NullLogger<ComponentConfigService>.Instance);
     }
 

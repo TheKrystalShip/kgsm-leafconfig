@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — a unit's own configuration is read the way systemd reads it (ComponentSurface 1.0.0-dev.8, ComponentSurface.Http 1.0.0-dev.5)
+
+`ComponentUnitPaths` is where the unit-file roots and their precedence live, and both the floor reader
+and `ComponentUnitControl` ask it rather than each carrying a list. Four rules the reader now follows:
+
+- **One fragment.** systemd takes the unit file from the highest-precedence root and shadows the rest,
+  so reading one from every root merged values out of a unit that is not running.
+- **Drop-ins merge across roots by filename**, ordered by name, a higher root's file of a given name
+  replacing a lower one's rather than applying beside it.
+- **Several assignments on one `Environment=` line all count**, each optionally quoted so a value
+  containing a space stays whole. Reading only the first dropped every key after it, and the surface
+  reported those as unset.
+- **`export KEY=value`** in an env file is read, for a file written to be sourceable by a shell as well
+  as read by systemd.
+
+`ComponentSurfaceOptions.UnitDirectory` names one unit directory to search instead of systemd's own
+roots — for a host that keeps its units where no root covers, and for a test that needs a unit it can
+write. Blank means the standard set, which is right on any provisioned host.
+
+`UnitFloorTests` pins each rule, including the two precedence ones and the override file's exclusion
+from the floor it sits above.
+
 ### Fixed — a floor source that could not be read is reported as unknown, not as the coded default (ComponentSurface 1.0.0-dev.7, ComponentSurface.Http 1.0.0-dev.4)
 
 `ComponentFloorReader.Read` returns `ComponentFloor` — the values it read, and whether every declared
