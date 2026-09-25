@@ -48,6 +48,8 @@ internal sealed class ActionScanner(MetadataLoadContext context, IReadOnlyList<A
     private readonly Dictionary<string, List<(RequirementDef Requirement, string Where)>> _requires = new(StringComparer.Ordinal);
     private readonly Dictionary<string, SortedSet<string>> _referenced = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IReadOnlyList<string>> _performsCache = new(StringComparer.Ordinal);
+    private readonly List<(MethodBase Caller, string Action)> _calls = [];
+    private readonly Dictionary<MethodBase, HashSet<string>> _named = [];
 
     /// <summary>Read and check everything; throws naming every fault at once.</summary>
     public ActionSurface Scan()
@@ -273,10 +275,28 @@ internal sealed class ActionScanner(MetadataLoadContext context, IReadOnlyList<A
             MethodBodyBlock body = pe.GetMethodBody(definition.RelativeVirtualAddress);
             Walk(body.GetILReader(), reader, assembly, caller, stateMachines);
         }
+
+        // Judged once every body is read, because a call is covered by what its method names anywhere
+        // in its body — a check made after the call counts as much as one made before it — and by what
+        // the method it was compiled out of names.
+        foreach ((MethodBase caller, string action) in _calls)
+        {
+            if (!Covered(caller, action, stateMachines, depth: 0))
+                _faults.Add(
+                    $"{Where(caller, stateMachines)} calls a method that performs '{action}' and neither names it " +
+                    $"nor has [Requires(\"{action}\", …)] beside it. Check the caller for it, or require it — on " +
+                    "the method, its type or the assembly");
+        }
+
+        _calls.Clear();
+        _named.Clear();
     }
 
     private void Walk(BlobReader il, MetadataReader reader, Assembly assembly, MethodBase caller, Dictionary<string, MethodBase> stateMachines)
     {
+        HashSet<string> named = new(StringComparer.Ordinal);
+        _named[caller] = named;
+
         while (il.RemainingBytes > 0)
         {
             int first = il.ReadByte();
@@ -308,17 +328,13 @@ internal sealed class ActionScanner(MetadataLoadContext context, IReadOnlyList<A
                     break;
                 case OperandType.InlineString:
                     string literal = reader.GetUserString(MetadataTokens.UserStringHandle(il.ReadInt32()));
+                    named.Add(literal);
                     Reference(literal, Where(caller, stateMachines));
                     break;
                 case OperandType.InlineMethod:
                     int token = il.ReadInt32();
                     foreach (string action in PerformedBy(reader, assembly, MetadataTokens.EntityHandle(token)))
-                    {
-                        if (!Covered(caller, action, stateMachines, depth: 0))
-                            _faults.Add(
-                                $"{Where(caller, stateMachines)} calls a method that performs '{action}' with no " +
-                                $"[Requires(\"{action}\", …)] beside it — on the method, its type or the assembly");
-                    }
+                        _calls.Add((caller, action));
 
                     break;
                 default:
@@ -498,22 +514,34 @@ internal sealed class ActionScanner(MetadataLoadContext context, IReadOnlyList<A
     // ── Where a call sits ─────────────────────────────────────────────────────
 
     /// <summary>
-    /// Whether a <c>[Requires(action)]</c> covers a call made in <paramref name="caller"/>.
+    /// Whether a call made in <paramref name="caller"/> says which action it performs.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// A call performs an action for one of two principals, and either is a way of saying so. As the
+    /// component's own service account, it carries a <c>[Requires(action)]</c>. For a person, the method
+    /// checks that person for the action, so it names it — in its body, as the id it evaluates, or in an
+    /// attribute such as <c>[Authorize(Policy = …)]</c>. A method or type naming the action covers the
+    /// call; one naming nothing is a call nobody decided anyone may make.
+    /// </para>
+    /// <para>
     /// The compiler moves code out of the method it was written in: an async or iterator body into a
     /// state machine type, a lambda or local function into a method named after its parent. The
     /// declaration is written on the method a person wrote, so each of those is traced back to it — a
     /// state machine through the attribute the compiler leaves on its origin, a lambda through the name
     /// it is given — and every enclosing type and the assembly count as well.
+    /// </para>
     /// </remarks>
     private bool Covered(MethodBase caller, string action, Dictionary<string, MethodBase> stateMachines, int depth)
     {
         if (depth > 8)
             return false;
 
-        if (RequiresOn(caller.GetCustomAttributesData(), action))
+        if (NamedBy(caller.GetCustomAttributesData(), action)
+            || (_named.TryGetValue(caller, out HashSet<string>? named) && named.Contains(action)))
+        {
             return true;
+        }
 
         if (caller.DeclaringType is not { } type)
             return false;
@@ -548,15 +576,35 @@ internal sealed class ActionScanner(MetadataLoadContext context, IReadOnlyList<A
 
         for (Type? t = type; t is not null; t = t.DeclaringType)
         {
-            if (RequiresOn(t.GetCustomAttributesData(), action))
+            if (NamedBy(t.GetCustomAttributesData(), action))
                 return true;
         }
 
-        return RequiresOn(type.Assembly.GetCustomAttributesData(), action);
+        return type.Assembly.GetCustomAttributesData()
+            .Any(a => Named(a, Names.Attributes.Requires) && (string?)a.ConstructorArguments[0].Value == action);
     }
 
-    private static bool RequiresOn(IEnumerable<CustomAttributeData> attributes, string action) =>
-        attributes.Any(a => Named(a, Names.Attributes.Requires) && (string?)a.ConstructorArguments[0].Value == action);
+    /// <summary>Whether any of these attributes carries <paramref name="action"/> as an argument.</summary>
+    private static bool NamedBy(IEnumerable<CustomAttributeData> attributes, string action)
+    {
+        foreach (CustomAttributeData a in attributes)
+        {
+            try
+            {
+                if (a.ConstructorArguments.Any(arg => arg.Value as string == action)
+                    || a.NamedArguments.Any(arg => arg.TypedValue.Value as string == action))
+                {
+                    return true;
+                }
+            }
+            catch (Exception e) when (e is FileNotFoundException or FileLoadException or TypeLoadException)
+            {
+                // An attribute whose type cannot be resolved cannot be read, and so names nothing.
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>Whether a type or method name is one the compiler made up: it starts with <c>&lt;</c>.</summary>
     private static bool Generated(string name) => name.StartsWith('<');

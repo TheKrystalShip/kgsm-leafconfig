@@ -71,6 +71,16 @@ public class ActionManifestTests
     }
 
     [Fact]
+    public void A_call_made_for_a_person_is_covered_by_the_check_that_names_its_action()
+    {
+        // StartEndpoint checks the person for kgsm:server.start — in its body, and in a policy
+        // attribute — and requires nothing. It stays covered with every declaration removed, and adds
+        // no requirement to the service account's manifest.
+        Assert.DoesNotContain("StartEndpoint", Careless().Message);
+        Assert.DoesNotContain(Reactor().Actions.Requires, r => r.Action == "kgsm:server.start");
+    }
+
+    [Fact]
     public void An_automating_setting_that_defaults_on_fails_the_build()
     {
         GenException e = Assert.Throws<GenException>(

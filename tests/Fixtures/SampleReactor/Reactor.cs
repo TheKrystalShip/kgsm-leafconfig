@@ -61,6 +61,33 @@ public sealed class Restarter(IEngine engine)
 }
 
 /// <summary>
+/// Calls made for a person, who is checked for the action rather than the reactor's own service account
+/// — so they need no requirement, and none reaches the manifest. One names the action in its body, the
+/// way a check against the evaluator does; the other in a policy attribute.
+/// </summary>
+public sealed class StartEndpoint(IEngine engine)
+{
+    public bool Start(string instance)
+    {
+        if (!Access.Check(EngineActions.ServerStart))
+            return false;
+
+        engine.Start(instance);
+        return true;
+    }
+
+    [Policy(EngineActions.ServerStart)]
+    public void StartChecked(string instance) => engine.Start(instance);
+}
+
+/// <summary>Stands in for <c>[Authorize(Policy = …)]</c>.</summary>
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class PolicyAttribute(string policy) : Attribute
+{
+    public string Policy { get; } = policy;
+}
+
+/// <summary>
 /// A call from a lambda, through the concrete class rather than the interface, covered by a declaration
 /// on the type.
 /// </summary>

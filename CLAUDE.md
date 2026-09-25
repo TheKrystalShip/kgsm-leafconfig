@@ -17,8 +17,8 @@ This repo owns the config descriptor's **rules**, and ships both halves of them 
 
 The generator also writes the component's **action manifest** beside each descriptor, from `[Action]`,
 `[Requires]` and `[Performs]` (`src/Attributes/ActionAttributes.cs`), reading method bodies as IL to
-fail the build when a call performs an action nothing requires or the code names an own action nothing
-declares. Format authority: `kgsm-docs/reference/action-manifest.md`. **The IL walk reads method bodies
+fail the build when a call performs an action that neither a `[Requires]` nor a check naming it covers,
+or when the code names an own action nothing declares. Format authority: `kgsm-docs/reference/action-manifest.md`. **The IL walk reads method bodies
 through `System.Reflection.Metadata` and resolves call targets through the same `MetadataLoadContext`**
 — it never loads a type, so it keeps the invariant below.
 

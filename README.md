@@ -93,7 +93,7 @@ produced:
 - `floorSources` that does not start with the settings file
 - a named section or action assembly that is not beside the component
 - an `[Automates]` setting whose default is not off
-- a call to a `[Performs]` method with no `[Requires]` for its action beside it
+- a call to a `[Performs]` method that neither requires its action nor names it in a check
 - a string in the component's own action namespace that no `[Action]` declares
 - an action declared twice differently, a requirement at two scopes or in the component's own namespace,
   or a declaration of a standard surface action
@@ -149,9 +149,13 @@ public sealed class Restarter(IInstanceService instances)
 ```
 
 Method bodies are read as IL. A call to a method a client package marks `[Performs]` — through its
-interface or a class implementing it — needs a `[Requires]` for that action on the calling method, the
-method a lambda or async state machine was compiled out of, an enclosing type, or the assembly. A string
-in the component's own namespace, as a literal or a constant, has to be declared.
+interface or a class implementing it — has to say which principal it performs the action for. The
+component's own service account says it with a `[Requires]`, which puts the action in the manifest's
+`requires`. A person says it through the check they pass: the calling method names the action, in its
+body (the id it evaluates) or in an attribute (`[Authorize(Policy = …)]`), and nothing is added to
+`requires`. Either counts on the calling method, the method a lambda or async state machine was compiled
+out of, or an enclosing type, and a `[Requires]` also counts on the assembly. A string in the
+component's own namespace, as a literal or a constant, has to be declared.
 
 ### What a descriptor cannot express
 

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added — the action manifest (ComponentConfig 3.2.0-dev.1, ComponentSurface 1.0.0-dev.9)
+### Added — the action manifest (ComponentConfig 3.2.0-dev.2, ComponentSurface 1.0.0-dev.9)
 
 A component's build writes its action manifest beside each descriptor
 (`deploy/kgsm-x.leaf.json` → `deploy/kgsm-x.leaf.actions.json`) in the format
@@ -20,8 +20,10 @@ scope for a leaf and cluster scope for an anchor), and the other components' act
   **`[ActionAssembly]`** naming a library holding more of them; **`ActionNamespace`** on `[Leaf]`,
   `[Anchor]` and `[LeafOrAnchor]`.
 - **The build fails when the declarations and the code disagree.** The generator walks every method
-  body's IL. A call to a `[Performs]` method needs a `[Requires]` for its action on the caller, on the
-  method an async state machine or lambda came from, on an enclosing type, or on the assembly. A literal
+  body's IL. A call to a `[Performs]` method needs either a `[Requires]` for its action (a call as the
+  component's own service account) or the calling method naming the action in its body or an attribute
+  (a call for a person, who is checked for it). Either counts on the caller, the method an async state
+  machine or lambda came from, or an enclosing type, and a `[Requires]` also counts on the assembly. A literal
   or constant in the component's own namespace needs an `[Action]`. Conflicting declarations,
   requirements in the component's own namespace, and declarations of a standard action are refused.
 - **`[Automates]`** marks a setting that switches automated behaviour on. The descriptor carries it as
