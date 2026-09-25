@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — a floor source that could not be read is reported as unknown, not as the coded default (ComponentSurface 1.0.0-dev.7, ComponentSurface.Http 1.0.0-dev.4)
+
+`ComponentFloorReader.Read` returns `ComponentFloor` — the values it read, and whether every declared
+source was actually read. A key's absence means two different things and the caller has to tell them
+apart: with a complete floor it is a key nothing sets, so the coded default is what the component is
+running with; with an incomplete one it may be a key an unreadable source sets, and naming the default
+then reports something nobody measured.
+
+`ComponentConfigService` spends the fact. A field with no override and no floor value falls to
+`unknown` with no effective value when the floor is incomplete, which is what the `unknown` source has
+always meant on the wire — *a declared floor source could not be read* — and it was unreachable for
+exactly that reason. A value a source did supply stays measured whatever else failed; only what would
+have been inferred from absence is withheld.
+
+An absent file is not a failure: nothing sets those keys, which is a measurement, and systemd tolerates
+the same absence. A file that is there and cannot be read or parsed is, as is a unit found in no unit
+root, and a source of a kind this build does not understand.
+
+`FloorCompletenessTests` pins each of those, and pins the projection through `ComponentConfigService`
+itself rather than through a copy of its rule.
+
 ### Fixed — a settings file's booleans are spelled the way every other tier spells one (ComponentSurface 1.0.0-dev.6, ComponentSurface.Http 1.0.0-dev.3)
 
 `ComponentFloorReader` flattens a JSON `true` to `"true"` rather than `"True"`. Every tier of a

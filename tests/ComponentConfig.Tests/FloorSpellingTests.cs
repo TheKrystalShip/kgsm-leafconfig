@@ -42,7 +42,7 @@ public class FloorSpellingTests : IDisposable
             Path.Combine(_dir, "descriptor.json"), Path.Combine(_dir, "overrides.env"));
 
         return new ComponentFloorReader(options, NullLogger<ComponentFloorReader>.Instance)
-            .Read([new ComponentFloorSource("appsettings", path)]);
+            .Read([new ComponentFloorSource("appsettings", path)]).Values;
     }
 
     [Fact]

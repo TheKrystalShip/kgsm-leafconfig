@@ -42,17 +42,23 @@ public sealed class ComponentConfigService(
             return null;
 
         IReadOnlyDictionary<string, string> over = overrides.Read();
-        IReadOnlyDictionary<string, string> floor = floors.Read(descriptor.FloorSources);
+        ComponentFloor floor = floors.Read(descriptor.FloorSources);
 
         var fields = new List<ComponentConfigField>(descriptor.Fields.Count);
         foreach (ComponentFieldDef f in descriptor.Fields)
         {
             over.TryGetValue(f.Env, out string? overridden);
-            floor.TryGetValue(f.Env, out string? floored);
+            floor.Values.TryGetValue(f.Env, out string? floored);
 
+            // An override is what this surface wrote and a floor value was read off disk, so both are
+            // measured whatever else failed. Below them the answer depends on whether the floor is
+            // complete: with every source read, a key nothing sets is running on its coded default;
+            // with a source that could not be read, it may be a key that source sets — and naming the
+            // default then reports something nobody measured.
             string source =
                 overridden is not null ? ComponentConfigSource.Override
                 : floored is not null ? ComponentConfigSource.Floor
+                : !floor.Complete ? ComponentConfigSource.Unknown
                 : f.Default is not null ? ComponentConfigSource.Default
                 : ComponentConfigSource.Unknown;
 
