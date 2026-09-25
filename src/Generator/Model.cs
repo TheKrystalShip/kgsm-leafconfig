@@ -32,8 +32,12 @@ internal sealed record ComponentIdentity(
     string ApplyMode,
     bool ReadOnly,
     string? ReadOnlyReason,
-    string? AnchorRole = null)
+    string? AnchorRole = null,
+    string? ActionNamespace = null)
 {
+    /// <summary>The component half of this component's action ids: declared, or its id.</summary>
+    public string Namespace => string.IsNullOrWhiteSpace(ActionNamespace) ? Id : ActionNamespace!;
+
     /// <summary>The role sentence for the descriptor being written, which is the only field whose
     /// value depends on which of the two an either-kind component is being described as.</summary>
     public string RoleFor(ComponentKind written) =>
@@ -71,6 +75,12 @@ internal sealed record FieldDef
     /// <see cref="Env"/>. Coverage checks against this rather than the variable name.
     /// </summary>
     public string? SettingsKey { get; init; }
+
+    /// <summary>
+    /// Whether setting this switches automated behaviour on. Whoever sets it becomes the author of that
+    /// behaviour; its default is off.
+    /// </summary>
+    public bool Automates { get; init; }
 
     /// <summary>Where the description came from, so the tool can report a fallback rather than hide it.</summary>
     public required DescriptionSource DescriptionFrom { get; init; }

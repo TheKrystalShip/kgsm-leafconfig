@@ -30,6 +30,21 @@ internal static class Fixture
     /// <inheritdoc cref="EitherAssembly"/>
     public static string EitherSettings => Metadata("EitherComponentSettings");
 
+    /// <summary>The component the action manifest's reference example describes.</summary>
+    public static string ReactorAssembly => Metadata("ReactorAssembly");
+
+    /// <inheritdoc cref="ReactorAssembly"/>
+    public static string ReactorSettings => Metadata("ReactorSettings");
+
+    /// <summary>The reactor's own source with its action declarations compiled out.</summary>
+    public static string CarelessAssembly => Metadata("CarelessAssembly");
+
+    /// <inheritdoc cref="CarelessAssembly"/>
+    public static string CarelessSettings => Metadata("CarelessSettings");
+
+    /// <summary>The reactor's settings with its automating setting switched on by default.</summary>
+    public static string EnforcingSettings => Metadata("EnforcingSettings");
+
     public static string Golden(string name) => Path.Combine(Metadata("GoldenDirectory"), name);
 
     private static string Metadata(string key) =>

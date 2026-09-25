@@ -23,6 +23,19 @@ internal static class Names
         internal const string Ignore = "ConfigIgnoreAttribute";
         internal const string FrameworkField = "ConfigFrameworkFieldAttribute";
         internal const string FrameworkNamespace = "ConfigFrameworkNamespaceAttribute";
+        internal const string Automates = "AutomatesAttribute";
+        internal const string Action = "ActionAttribute";
+        internal const string Requires = "RequiresAttribute";
+        internal const string Performs = "PerformsAttribute";
+        internal const string ActionAssembly = "ActionAssemblyAttribute";
+
+        /// <summary>The compiler's marks on a method whose body it moved into a state machine type.</summary>
+        internal const string AsyncStateMachine = "AsyncStateMachineAttribute";
+        internal const string IteratorStateMachine = "IteratorStateMachineAttribute";
+        internal const string AsyncIteratorStateMachine = "AsyncIteratorStateMachineAttribute";
+
+        /// <summary>Where the manifest's version comes from.</summary>
+        internal const string InformationalVersion = "AssemblyInformationalVersionAttribute";
     }
 
     /// <summary>Named attribute arguments. These match the property names in ComponentConfigAttributes.cs.</summary>
@@ -46,6 +59,8 @@ internal static class Names
         internal const string Description = "Description";
         internal const string Default = "Default";
         internal const string SettingsKey = "SettingsKey";
+        internal const string ActionNamespace = "ActionNamespace";
+        internal const string Self = "Self";
     }
 
     /// <summary>The descriptor's `type` vocabulary (tks/leaf-config-descriptor.md §Types).</summary>
@@ -147,6 +162,35 @@ internal static class Names
         internal const string Risk = "risk";
         internal const string PairedApiKey = "pairedApiKey";
         internal const string DependsOn = "dependsOn";
+        internal const string Automates = "automates";
+    }
+
+    /// <summary>The action manifest (kgsm-docs/reference/action-manifest.md).</summary>
+    internal static class Manifest
+    {
+        /// <summary>The manifest schema this tool emits.</summary>
+        internal const int SchemaVersion = 1;
+
+        /// <summary>What the descriptor's <c>.json</c> becomes in the manifest's file name beside it.</summary>
+        internal const string Suffix = ".actions.json";
+
+        internal const string Component = "component";
+        internal const string Version = "version";
+        internal const string Actions = "actions";
+        internal const string Requires = "requires";
+        internal const string Id = "id";
+        internal const string Title = "title";
+        internal const string Effect = "effect";
+        internal const string Scope = "scope";
+        internal const string Self = "self";
+        internal const string Action = "action";
+        internal const string Why = "why";
+
+        /// <summary>The <c>effect</c> vocabulary, in the order the attribute enum declares it.</summary>
+        internal static readonly string[] Effects = ["read", "write", "execute"];
+
+        /// <summary>The <c>scope</c> vocabulary, in the order the attribute enum declares it.</summary>
+        internal static readonly string[] Scopes = ["cluster", "node", "instance"];
     }
 
     /// <summary>XML documentation-file names.</summary>

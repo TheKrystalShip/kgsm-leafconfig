@@ -154,6 +154,10 @@ internal static class Emitter
             WriteOptional(writer, Names.Json.PairedApiKey, field.PairedApiKey);
             WriteOptional(writer, Names.Json.DependsOn, field.DependsOn);
 
+            // Omitted rather than written false, like readOnly: absence is "switches nothing on".
+            if (field.Automates)
+                writer.WriteBoolean(Names.Json.Automates, true);
+
             writer.WriteEndObject();
         }
 

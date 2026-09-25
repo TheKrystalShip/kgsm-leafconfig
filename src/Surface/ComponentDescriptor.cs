@@ -60,7 +60,8 @@ public sealed record ComponentFieldDef(
     string? Unit,
     string Risk,
     string? PairedApiKey,
-    string? DependsOn)
+    string? DependsOn,
+    bool Automates = false)
 {
     /// <summary>A secret is never echoed back, whichever tier its value came from.</summary>
     public bool IsSecret => string.Equals(Type, "secret", StringComparison.Ordinal);

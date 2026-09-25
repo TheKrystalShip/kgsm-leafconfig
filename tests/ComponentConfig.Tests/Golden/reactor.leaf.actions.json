@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "component": "reactor",
+  "version": "0.4.0",
+  "actions": [
+    {
+      "id": "config.read",
+      "title": "Read Reactor settings",
+      "effect": "read",
+      "scope": "node"
+    },
+    {
+      "id": "config.write",
+      "title": "Change Reactor settings",
+      "effect": "write",
+      "scope": "node"
+    },
+    {
+      "id": "journal.read",
+      "title": "Read Reactor logs",
+      "effect": "read",
+      "scope": "node"
+    },
+    {
+      "id": "lifecycle.restart",
+      "title": "Restart Reactor",
+      "effect": "execute",
+      "scope": "node"
+    },
+    {
+      "id": "rules.write",
+      "title": "Change reactor rules",
+      "effect": "write",
+      "scope": "node"
+    }
+  ],
+  "requires": [
+    {
+      "action": "kgsm:server.restart",
+      "scope": "instance",
+      "why": "Restart a crashed server when a rule fires"
+    }
+  ]
+}

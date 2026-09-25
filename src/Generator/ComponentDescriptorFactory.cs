@@ -3,9 +3,13 @@ using System.Runtime.InteropServices;
 
 namespace TheKrystalShip.KGSM.ComponentConfig.Gen;
 
-/// <summary>A built descriptor, plus anything the leaf ought to hear about while building it.</summary>
+/// <summary>
+/// A built descriptor and action surface, plus anything the component ought to hear about while
+/// building them.
+/// </summary>
 internal sealed record BuildResult(
     Descriptor Descriptor,
+    ActionSurface Actions,
     IReadOnlyList<string> Warnings,
     bool DocumentationFound);
 
@@ -20,7 +24,8 @@ internal static class ComponentDescriptorFactory
         using MetadataLoadContext context = Open(assemblyPath);
 
         Assembly entry = context.LoadFromAssemblyPath(Path.GetFullPath(assemblyPath));
-        IReadOnlyList<Assembly> sectionAssemblies = [entry, .. Declared(context, entry, assemblyPath)];
+        IReadOnlyList<Assembly> sectionAssemblies =
+            [entry, .. Declared(context, entry, assemblyPath, Names.Attributes.SectionAssembly)];
 
         var docs = new XmlDocs(sectionAssemblies.Select(a => Path.ChangeExtension(a.Location, Names.Docs.Extension)));
 
@@ -30,33 +35,39 @@ internal static class ComponentDescriptorFactory
 
         Validator.Check(descriptor, settings.Keys);
 
-        return new BuildResult(descriptor, scanner.Warnings, docs.Found);
+        IReadOnlyList<Assembly> actionAssemblies =
+            [entry, .. Declared(context, entry, assemblyPath, Names.Attributes.ActionAssembly)];
+        ActionSurface actions = new ActionScanner(context, actionAssemblies, descriptor.Identity).Scan();
+
+        return new BuildResult(descriptor, actions, scanner.Warnings, docs.Found);
     }
 
     /// <summary>
-    /// The other assemblies this leaf declares its settings sections in.
+    /// The other assemblies this component declares its settings sections, or its actions, in.
     /// </summary>
     /// <remarks>
-    /// Named explicitly rather than discovered, because leaves share libraries: kgsm-bot compiles
+    /// Named explicitly rather than discovered, because components share libraries: kgsm-bot compiles
     /// against the assistant's projects, and scanning everything beside the binary would pull a section
-    /// annotated over there into the bot's descriptor — keys the bot's settings file never declares,
-    /// failing a build in a repo nobody touched. A missing one is an error rather than a silent
-    /// omission, since the whole point of naming it is that its knobs must appear.
+    /// or an action annotated over there into the bot's — keys the bot's settings file never declares,
+    /// actions the bot never performs, failing a build in a repo nobody touched. A missing one is an
+    /// error rather than a silent omission, since the whole point of naming it is that its declarations
+    /// must appear.
     /// </remarks>
-    private static IEnumerable<Assembly> Declared(MetadataLoadContext context, Assembly entry, string entryPath)
+    private static IEnumerable<Assembly> Declared(MetadataLoadContext context, Assembly entry, string entryPath, string attributeName)
     {
         string directory = Path.GetDirectoryName(Path.GetFullPath(entryPath))!;
 
         foreach (CustomAttributeData attribute in entry.GetCustomAttributesData()
-                     .Where(a => a.AttributeType.Name == Names.Attributes.SectionAssembly))
+                     .Where(a => a.AttributeType.Name == attributeName))
         {
             string name = (string)attribute.ConstructorArguments[0].Value!;
             string path = Path.Combine(directory, name + Names.AssemblyExtension);
+            string declared = attributeName[..^"Attribute".Length];
 
             if (!File.Exists(path))
                 throw new GenException(
-                    $"[assembly: ConfigSectionAssembly(\"{name}\")] names an assembly that is not beside the " +
-                    $"leaf: {path}. Its sections would be missing from the descriptor.");
+                    $"[assembly: {declared}(\"{name}\")] names an assembly that is not beside the " +
+                    $"component: {path}. What it declares would be missing.");
 
             yield return context.LoadFromAssemblyPath(path);
         }

@@ -49,6 +49,9 @@ internal sealed class LeafAttribute(string id, string displayName, string unit, 
 
     /// <summary>Why, in the leaf's own words. Required when <see cref="ReadOnly"/>.</summary>
     public string? ReadOnlyReason { get; set; }
+
+    /// <summary>The component half of this leaf's action ids. Unset uses <see cref="Id"/>.</summary>
+    public string? ActionNamespace { get; set; }
 }
 
 /// <summary>
@@ -95,6 +98,13 @@ internal sealed class AnchorAttribute(string id, string displayName, string unit
 
     /// <summary>Why, in the anchor's own words. Required when <see cref="ReadOnly"/>.</summary>
     public string? ReadOnlyReason { get; set; }
+
+    /// <summary>
+    /// The component half of this anchor's action ids — <c>auth</c> for <c>auth:roles.edit</c>. Unset
+    /// uses <see cref="Id"/>; an anchor whose id names its standing (<c>auth-anchor</c>) sets it, so its
+    /// actions are named for what it does rather than for how it is deployed.
+    /// </summary>
+    public string? ActionNamespace { get; set; }
 }
 
 /// <summary>
@@ -149,6 +159,9 @@ internal sealed class LeafOrAnchorAttribute(string id, string displayName, strin
 
     /// <summary>Why, in the component's own words. Required when <see cref="ReadOnly"/>.</summary>
     public string? ReadOnlyReason { get; set; }
+
+    /// <summary>The component half of its action ids, the same in either standing. Unset uses <see cref="Id"/>.</summary>
+    public string? ActionNamespace { get; set; }
 }
 
 /// <summary>

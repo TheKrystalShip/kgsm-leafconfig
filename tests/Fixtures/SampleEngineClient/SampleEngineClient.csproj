@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- A client package takes the attributes for [Performs] alone, as kgsm-lib does. -->
+    <Compile Include="../../../src/Attributes/*.cs" LinkBase="ComponentConfig" />
+  </ItemGroup>
+
+</Project>

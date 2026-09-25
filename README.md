@@ -18,9 +18,12 @@ That produces the field's entry in `deploy/kgsm-monitor.leaf.json`, which the le
 installs into `/var/lib/kgsm/leaves/` for `kgsm-api` to read. The format itself is specified in
 `tks/leaf-config-descriptor.md`; this package is how a leaf produces one.
 
-**Every .NET leaf in the ecosystem uses it** — `kgsm-monitor`, `kgsm-watchdog`, `kgsm-scheduler`,
-`kgsm-firewall`, `kgsm-bot`, `kgsm-llm` and `kgsm-api`, 215 fields between them. It is the only
-implementation of the descriptor's rules; none of those repos carries a descriptor test of its own.
+**Every .NET component in the ecosystem uses it.** It is the only implementation of the descriptor's
+rules; no component carries a descriptor test of its own.
+
+The same build writes the component's **action manifest** beside the descriptor — the actions it
+performs and the other components' actions it performs as its own service account — from `[Action]`
+and `[Requires]` on the code that does them. See *Actions* below.
 
 ## Why generated
 
@@ -59,7 +62,7 @@ descriptor's strings survive into a native binary.
 ## Using it
 
 ```xml
-<PackageReference Include="TheKrystalShip.KGSM.ComponentConfig" Version="2.3.0-dev.1" PrivateAssets="all" />
+<PackageReference Include="TheKrystalShip.KGSM.ComponentConfig" Version="<pin>" PrivateAssets="all" />
 
 <PropertyGroup>
   <ComponentSettingsFile>kgsm-monitor.settings.json</ComponentSettingsFile>
@@ -88,7 +91,12 @@ produced:
 - an enum with no values, or a default outside them; bounds on a non-numeric field
 - an unknown `type`, `risk` or `applyMode`; `readOnly` with no reason
 - `floorSources` that does not start with the settings file
-- a named section assembly that is not beside the leaf
+- a named section or action assembly that is not beside the component
+- an `[Automates]` setting whose default is not off
+- a call to a `[Performs]` method with no `[Requires]` for its action beside it
+- a string in the component's own action namespace that no `[Action]` declares
+- an action declared twice differently, a requirement at two scopes or in the component's own namespace,
+  or a declaration of a standard surface action
 
 A field described only by its `<summary>`, and a bound property nothing describes, both still build —
 and the build names each one, so neither stays invisible.
@@ -109,6 +117,41 @@ and the build names each one, so neither stays invisible.
 | `[ConfigSection]` | class | the configuration section a settings type binds from |
 | `[ConfigField]` | property | key, label, group, type, bounds, unit, risk, `pairedApiKey`, `dependsOn` |
 | `[ConfigIgnore]` | property | bound, but not configuration |
+| `[Automates]` | property | a setting that switches automated behaviour on; its default is off |
+| `[Action]` | method, class, assembly | an action this component performs: id, title, effect, scope, `Self` |
+| `[Requires]` | method, class, assembly | another component's action this one performs as its service account, the scope it needs it at, and why |
+| `[Performs]` | method (client package) | the action a client-package call performs, so every caller must require it |
+| `[ActionAssembly]` | assembly | another assembly this component's actions and requirements are declared in |
+
+`ActionNamespace` on the identity attribute names the component half of its action ids; it defaults to
+the id.
+
+### Actions
+
+The manifest is written to the descriptor's path with `.json` made `.actions.json`
+(`deploy/kgsm-reactor.leaf.actions.json`), one per descriptor, and its format is
+`kgsm-docs/reference/action-manifest.md`. Besides what the component declares it carries the standard
+surface's four actions — `config.read`, `config.write`, `journal.read`, `lifecycle.restart` — at the
+scope the component is administered at, which `ComponentSurfaceActions` names.
+
+```csharp
+public sealed class RulesEndpoint
+{
+    [Action(ReactorActions.RulesWrite, "Change reactor rules", DeclaredEffect.Write, DeclaredScope.Node)]
+    public bool Write() => access.Allows(caller, ReactorActions.RulesWrite, node);
+}
+
+public sealed class Restarter(IInstanceService instances)
+{
+    [Requires(KgsmActions.ServerRestart, DeclaredScope.Instance, "Restart a crashed server when a rule fires")]
+    public async Task OnCrashAsync(string instance) => await instances.RestartAsync(instance);
+}
+```
+
+Method bodies are read as IL. A call to a method a client package marks `[Performs]` — through its
+interface or a class implementing it — needs a `[Requires]` for that action on the calling method, the
+method a lambda or async state machine was compiled out of, an enclosing type, or the assembly. A string
+in the component's own namespace, as a literal or a constant, has to be declared.
 
 ### What a descriptor cannot express
 
@@ -158,10 +201,12 @@ dotnet test kgsm-componentconfig.slnx                          # generator + val
 ../scripts/publish-packages.sh kgsm-componentconfig     # pack + push to the org's feed
 ```
 
-The tests run the generator against `tests/Fixtures/SampleLeaf`, `tests/Fixtures/SampleAnchor` and `tests/Fixtures/EitherComponent`, real compiled components covering every
+The tests run the generator against the real compiled components in `tests/Fixtures/`, covering every
 shape the scanner handles — nested section, name-keyed map, C# enum, secret, suppressed default,
-ignored property, a section in a declared library — and pin the whole emitted document against a
-golden copy.
+ignored property, a section in a declared library, an action and a requirement reached through an async
+method, a lambda and a concrete class — and pin the emitted descriptor and action manifest against golden
+copies. `CarelessComponent` is `SampleReactor`'s own source with its action declarations compiled out,
+so the build that must fail is the real one with the attributes taken away.
 
 Consumers resolve the package from the local feed by `id+version`, and NuGet caches on that pair, so
 **bump `<Version>` in `src/Package/Package.csproj` for any change**: a same-version repack serves the

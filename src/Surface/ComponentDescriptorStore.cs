@@ -81,7 +81,7 @@ public sealed class ComponentDescriptorStore(ComponentSurfaceOptions options, IL
             fields.Add(new ComponentFieldDef(
                 key, env, f.Label ?? key, f.Description ?? "", f.Group,
                 f.Type ?? "string", f.Default, f.Values, f.Min, f.Max, f.Unit, f.Risk ?? "safe",
-                f.PairedApiKey, f.DependsOn));
+                f.PairedApiKey, f.DependsOn, f.Automates ?? false));
         }
 
         List<ComponentGroupDef> groups =

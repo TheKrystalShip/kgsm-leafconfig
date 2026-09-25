@@ -114,7 +114,8 @@ internal sealed class MetadataScanner(
             ApplyMode: Named<string>(identity, Names.Args.ApplyMode) ?? Names.ApplyModes.Restart,
             ReadOnly: Named<bool>(identity, Names.Args.ReadOnly),
             ReadOnlyReason: Named<string>(identity, Names.Args.ReadOnlyReason),
-            AnchorRole: anchorRole);
+            AnchorRole: anchorRole,
+            ActionNamespace: Named<string>(identity, Names.Args.ActionNamespace));
     }
 
     private List<GroupDef> ReadGroups() =>
@@ -248,6 +249,7 @@ internal sealed class MetadataScanner(
             Risk = NamedEnum(attr, Names.Args.Risk) ?? Names.Risks.Safe,
             PairedApiKey = Named<string>(attr, Names.Args.PairedApiKey),
             DependsOn = Named<string>(attr, Names.Args.DependsOn),
+            Automates = Attr(prop.GetCustomAttributesData(), Names.Attributes.Automates) is not null,
             DescriptionFrom = from,
             Order = order,
         };

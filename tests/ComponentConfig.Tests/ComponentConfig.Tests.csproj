@@ -26,6 +26,8 @@
     <ProjectReference Include="../Fixtures/SampleAnchor/SampleAnchor.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="../Fixtures/ConfusedComponent/ConfusedComponent.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="../Fixtures/EitherComponent/EitherComponent.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../Fixtures/SampleReactor/SampleReactor.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../Fixtures/CarelessComponent/CarelessComponent.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -61,6 +63,26 @@
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>EitherComponentSettings</_Parameter1>
       <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/EitherComponent/kgsm-sample-either.settings.json</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ReactorAssembly</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/SampleReactor/bin/$(Configuration)/net10.0/SampleReactor.dll</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ReactorSettings</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/SampleReactor/kgsm-reactor.settings.json</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>CarelessAssembly</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/CarelessComponent/bin/$(Configuration)/net10.0/CarelessComponent.dll</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>CarelessSettings</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/CarelessComponent/kgsm-careless.settings.json</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>EnforcingSettings</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)/../Fixtures/CarelessComponent/kgsm-enforcing.settings.json</_Parameter2>
     </AssemblyAttribute>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>GoldenDirectory</_Parameter1>

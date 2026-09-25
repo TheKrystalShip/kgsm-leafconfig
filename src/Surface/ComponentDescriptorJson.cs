@@ -44,7 +44,8 @@ internal sealed record RawComponentField(
     [property: JsonPropertyName("unit")] string? Unit,
     [property: JsonPropertyName("risk")] string? Risk,
     [property: JsonPropertyName("pairedApiKey")] string? PairedApiKey,
-    [property: JsonPropertyName("dependsOn")] string? DependsOn);
+    [property: JsonPropertyName("dependsOn")] string? DependsOn,
+    [property: JsonPropertyName("automates")] bool? Automates);
 
 /// <summary>
 /// Source-generated reading for the descriptor, so a Native-AOT component gains no reflection from

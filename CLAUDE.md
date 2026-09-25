@@ -15,6 +15,13 @@ This repo owns the config descriptor's **rules**, and ships both halves of them 
   read back the descriptor its build generated, project it with the host's deploy floors and the
   overrides in force, validate and write a change, read its unit's journal, restart it.
 
+The generator also writes the component's **action manifest** beside each descriptor, from `[Action]`,
+`[Requires]` and `[Performs]` (`src/Attributes/ActionAttributes.cs`), reading method bodies as IL to
+fail the build when a call performs an action nothing requires or the code names an own action nothing
+declares. Format authority: `kgsm-docs/reference/action-manifest.md`. **The IL walk reads method bodies
+through `System.Reflection.Metadata` and resolves call targets through the same `MetadataLoadContext`**
+— it never loads a type, so it keeps the invariant below.
+
 They are in one repo because the format's schema would otherwise have a writer and independent readers
 with nothing failing when they disagree. `SurfaceRoundTripTests` emits from the compiled fixture and
 parses the bytes it produced, which is the check that cannot exist while the two live apart.
@@ -73,7 +80,10 @@ The two version independently: they are separate artifacts with separate consume
 | `tests/Fixtures/SampleLeaf/` | A real compiled leaf covering every shape the scanner handles. |
 | `tests/Fixtures/SampleAnchor/` | The same, as an anchor — the fixture that keeps one shared body honest rather than coincidental. |
 | `tests/Fixtures/ConfusedComponent/` | Declares two identities, so the refusal is tested against a real assembly. |
-| `tests/Fixtures/EitherComponent/` | Declares `[LeafOrAnchor]`, so being described both ways is tested against a real assembly. |
+| `tests/Fixtures/EitherComponent/` | Declares `[LeafOrAnchor]`, so being described both ways is tested against a real assembly. Also declares assembly-level and self actions under its own `ActionNamespace`. |
+| `tests/Fixtures/SampleReactor/` | The action manifest's reference example: an `[Action]` its handler checks, and an engine action it requires from an async method and a lambda. |
+| `tests/Fixtures/CarelessComponent/` | `SampleReactor`'s source compiled with `CARELESS`, which removes its action declarations — the build that must fail. |
+| `tests/Fixtures/SampleEngineClient/` | A client package marking its calls `[Performs]`, the way kgsm-lib marks the engine's. |
 | `tests/ComponentConfig.Tests/` | Generator, validator and settings-flattening tests, plus the descriptor's round trip through `src/Surface/`. |
 
 ## The invariant the ComponentConfig package exists to protect

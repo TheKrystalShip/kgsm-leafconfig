@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — the action manifest (ComponentConfig 3.2.0-dev.1, ComponentSurface 1.0.0-dev.9)
+
+A component's build writes its action manifest beside each descriptor
+(`deploy/kgsm-x.leaf.json` → `deploy/kgsm-x.leaf.actions.json`) in the format
+`kgsm-docs/reference/action-manifest.md` fixes. It holds the actions the component performs, the
+standard surface's four (`config.read`, `config.write`, `journal.read`, `lifecycle.restart`, at node
+scope for a leaf and cluster scope for an anchor), and the other components' actions it requires.
+
+- **`[Action(id, title, effect, scope)]`** (with `Self`) and **`[Requires(action, scope, why)]`** on
+  methods, types or the assembly; **`[Performs(action)]`** on a client package's methods;
+  **`[ActionAssembly]`** naming a library holding more of them; **`ActionNamespace`** on `[Leaf]`,
+  `[Anchor]` and `[LeafOrAnchor]`.
+- **The build fails when the declarations and the code disagree.** The generator walks every method
+  body's IL. A call to a `[Performs]` method needs a `[Requires]` for its action on the caller, on the
+  method an async state machine or lambda came from, on an enclosing type, or on the assembly. A literal
+  or constant in the component's own namespace needs an `[Action]`. Conflicting declarations,
+  requirements in the component's own namespace, and declarations of a standard action are refused.
+- **`[Automates]`** marks a setting that switches automated behaviour on. The descriptor carries it as
+  `automates: true`, and the build fails unless its default is off. `ComponentFieldDef.Automates`
+  reads it back.
+- **`ComponentSurfaceActions`** names the standard surface's action ids, and a test holds the generator
+  to the same list.
+- Run over the built kgsm-reactor, kgsm-api, kgsm-monitor and kgsm-auth-anchor assemblies, the
+  generator reports no fault.
+
 ### Fixed — a unit's own configuration is read the way systemd reads it (ComponentSurface 1.0.0-dev.8, ComponentSurface.Http 1.0.0-dev.5)
 
 `ComponentUnitPaths` is where the unit-file roots and their precedence live, and both the floor reader

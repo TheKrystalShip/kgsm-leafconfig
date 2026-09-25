@@ -112,7 +112,30 @@ internal static class Validator
 
             CheckEnum(field, faults);
             CheckBounds(field, faults);
+            CheckAutomates(field, faults);
         }
+    }
+
+    /// <summary>The spellings of "off" an automating setting's default may take, compared case-insensitively.</summary>
+    private static readonly string[] Off = ["", "false", "0", "off", "none"];
+
+    /// <summary>
+    /// A setting that switches automated behaviour on starts off. Whoever turns it on becomes the author
+    /// of what it runs, and behaviour that ran from a shipped default would have no author at all.
+    /// </summary>
+    private static void CheckAutomates(FieldDef field, List<string> faults)
+    {
+        if (!field.Automates)
+            return;
+
+        if (field.Default is null)
+            faults.Add(
+                $"{field.Key} is [Automates] and has no default, so nothing shows that it starts off. " +
+                "Declare it off in the settings file.");
+        else if (!Off.Contains(field.Default.Trim(), StringComparer.OrdinalIgnoreCase))
+            faults.Add(
+                $"{field.Key} is [Automates] and defaults to '{field.Default}'. An automation runs only once " +
+                "a person switches it on and becomes its author, so its default is off.");
     }
 
     /// <summary>

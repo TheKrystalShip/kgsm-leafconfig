@@ -31,7 +31,7 @@ internal static class Program
 
           {ArgAssembly}  the leaf's built assembly, read as metadata (never loaded for execution)
           {ArgSettings}  the leaf's settings file, which supplies each field's coded default
-          {ArgOut}       where the descriptor is written
+          {ArgOut}       where the descriptor is written; its action manifest is written beside it
           {ArgCheck}     write nothing; fail if the file on disk is not what this would write
         """;
 
@@ -70,9 +70,19 @@ internal static class Program
         foreach ((string path, ComponentKind written) in Destinations(result.Descriptor.Identity, outPath))
         {
             string rendered = Emitter.Render(result.Descriptor, written);
-            int code = check ? Compare(path, rendered) : Write(path, rendered, result.Descriptor);
+            int code = check ? Compare(path, rendered) : Write(path, rendered, $"{result.Descriptor.Fields.Count} fields");
             if (code != Ok)
                 worst = code;
+
+            // The action manifest beside it, for the same kind: the standard surface's scope is where
+            // the component is administered, which is the one thing its standing changes.
+            string manifestPath = ActionManifestEmitter.PathFor(path);
+            string manifest = ActionManifestEmitter.Render(result.Actions, result.Descriptor.Identity, written);
+            int manifestCode = check
+                ? Compare(manifestPath, manifest)
+                : Write(manifestPath, manifest, $"{result.Actions.Actions.Count} actions, {result.Actions.Requires.Count} requirements");
+            if (manifestCode != Ok)
+                worst = manifestCode;
         }
 
         return worst;
@@ -161,7 +171,7 @@ internal static class Program
                 $"Add a <panel> tag to say what changing it does for whoever runs the host.");
     }
 
-    private static int Write(string path, string rendered, Descriptor descriptor)
+    private static int Write(string path, string rendered, string summary)
     {
         string? directory = Path.GetDirectoryName(Path.GetFullPath(path));
         if (directory is not null)
@@ -170,12 +180,12 @@ internal static class Program
         // Rewriting an identical file would touch its timestamp for nothing, and this runs on every build.
         if (File.Exists(path) && File.ReadAllText(path) == rendered)
         {
-            Console.WriteLine(Prefix + $"{descriptor.Identity.Id} unchanged ({descriptor.Fields.Count} fields)");
+            Console.WriteLine(Prefix + $"{Path.GetFileName(path)} unchanged ({summary})");
             return Ok;
         }
 
         File.WriteAllText(path, rendered);
-        Console.WriteLine(Prefix + $"wrote {path} ({descriptor.Fields.Count} fields)");
+        Console.WriteLine(Prefix + $"wrote {path} ({summary})");
         return Ok;
     }
 

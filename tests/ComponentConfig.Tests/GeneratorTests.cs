@@ -164,7 +164,7 @@ public class GeneratorTests
         GenException ex = Assert.Throws<GenException>(
             () => ComponentDescriptorFactory.Build(Fixture.MissingSectionAssembly, Fixture.Settings));
 
-        Assert.Contains("names an assembly that is not beside the leaf", ex.Message);
+        Assert.Contains("names an assembly that is not beside the component", ex.Message);
     }
 
     // ── Leaf-level ───────────────────────────────────────────────────────────
