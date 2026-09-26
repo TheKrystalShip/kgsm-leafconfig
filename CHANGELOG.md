@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — who switched an automation on (ComponentSurface 1.0.0-dev.10, ComponentSurface.Http 1.0.0-dev.6)
+
+- **`ComponentAutomationAuthors`** records the account that set each `[Automates]` setting, in an
+  owner-only `<override file>.authors.json` beside the overrides, and a component reads it back with
+  `AuthorOf(key)` when the automation fires. A change the surface cannot attribute clears the author,
+  and so does resetting the setting; an unreadable file reads as nobody.
+- **`ComponentConfigService.Apply(update, author)`** records the author of every `[Automates]` value it
+  writes that differs from the one in force.
+- **`IComponentCaller`** in `ComponentSurface.Http` is how a component names the caller of its own
+  surface: an anchor from the session it verified, a leaf with `RelayedComponentCaller`, which reads the
+  `Kgsm-Acting-Account` header the node's API relays on the leaf's socket.
+
 ### Added — the action manifest (ComponentConfig 3.2.0-dev.2, ComponentSurface 1.0.0-dev.9)
 
 A component's build writes its action manifest beside each descriptor

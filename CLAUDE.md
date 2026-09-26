@@ -75,7 +75,7 @@ The two version independently: they are separate artifacts with separate consume
 | `src/Attributes/` | The attribute definitions. Plain source, no project — packed into `build/src/` and compiled into each leaf by the package's props file. |
 | `src/Generator/` | The tool. A plain JIT console app (`componentdescgen`), packed into `tools/net10.0/`. |
 | `src/Package/` | Packaging only. Produces the `ComponentConfig` nupkg; builds nothing of its own. |
-| `src/Surface/` | The reader — descriptor parse, floors, override file, config projection + apply, journal read + follow, unit restart. A normal AOT-compatible library, published as `ComponentSurface`. |
+| `src/Surface/` | The reader — descriptor parse, floors, override file, config projection + apply, the author of each `[Automates]` setting beside the overrides, journal read + follow, unit restart. A normal AOT-compatible library, published as `ComponentSurface`. |
 | `build/*.props` `*.targets` | What a consuming leaf gets: the attribute source, `GenerateDocumentationFile`, and the `AfterTargets="Build"` generation step. |
 | `tests/Fixtures/SampleLeaf/` | A real compiled leaf covering every shape the scanner handles. |
 | `tests/Fixtures/SampleAnchor/` | The same, as an anchor — the fixture that keeps one shared body honest rather than coincidental. |

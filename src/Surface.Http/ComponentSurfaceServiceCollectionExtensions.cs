@@ -44,6 +44,7 @@ public static class ComponentSurfaceServiceCollectionExtensions
         services.AddSingleton<ComponentOverrideStore>();
         services.AddSingleton<ComponentFloorReader>();
         services.AddSingleton<ComponentUnitControl>();
+        services.AddSingleton<ComponentAutomationAuthors>();
         services.AddSingleton<ComponentConfigService>();
         services.AddSingleton<ComponentUnitReader>();
         services.AddSingleton<ComponentJournal>();

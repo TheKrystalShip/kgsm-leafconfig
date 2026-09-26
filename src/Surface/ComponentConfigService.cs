@@ -32,7 +32,8 @@ public sealed class ComponentConfigService(
     ComponentOverrideStore overrides,
     ComponentFloorReader floors,
     ComponentUnitControl unit,
-    ILogger<ComponentConfigService> logger)
+    ILogger<ComponentConfigService> logger,
+    ComponentAutomationAuthors? authors = null)
 {
     /// <summary>The current surface, or null when this host installed no descriptor for this component.</summary>
     public ComponentConfigView? Read()
@@ -126,7 +127,12 @@ public sealed class ComponentConfigService(
     /// Returns null when this component has no descriptor, or an error string naming the first thing
     /// wrong with the request.
     /// </summary>
-    public (ComponentApplyOutcome? Outcome, string? Error) Apply(ComponentConfigUpdate update)
+    /// <param name="update">The keys to set and reset.</param>
+    /// <param name="author">
+    /// The account making the change, recorded as the author of every <c>[Automates]</c> setting it
+    /// writes. Null when the caller cannot be identified, which leaves those settings with no author.
+    /// </param>
+    public (ComponentApplyOutcome? Outcome, string? Error) Apply(ComponentConfigUpdate update, string? author = null)
     {
         ComponentDescriptor? descriptor = descriptors.Current();
         if (descriptor is null)
@@ -190,6 +196,17 @@ public sealed class ComponentConfigService(
         }
 
         overrides.Write(rows);
+
+        if (authors is not null)
+        {
+            authors.Record(
+                values.Keys.Where(k =>
+                    descriptor.Field(k)!.Automates
+                    && (!before.TryGetValue(descriptor.Field(k)!.Env, out string? was) || was != values[k])),
+                reset.Where(k => descriptor.Field(k)!.Automates),
+                author,
+                DateTimeOffset.UtcNow);
+        }
 
         // Written before the restart is asked for, because after it there is nobody here to write it:
         // this names the file to remove if the component does not come back.

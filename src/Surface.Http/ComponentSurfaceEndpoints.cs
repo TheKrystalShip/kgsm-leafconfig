@@ -84,7 +84,8 @@ public static class ComponentSurfaceEndpoints
             }
 
             var config = ctx.RequestServices.GetRequiredService<ComponentConfigService>();
-            (ComponentApplyOutcome? outcome, string? error) = config.Apply(body);
+            string? author = ctx.RequestServices.GetService<IComponentCaller>()?.AccountOf(ctx);
+            (ComponentApplyOutcome? outcome, string? error) = config.Apply(body, author);
 
             if (error is not null)
             {
