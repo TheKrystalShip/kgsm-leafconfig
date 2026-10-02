@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — the config view says who switched each automation on (ComponentSurface 1.0.0-dev.11, ComponentSurface.Http 1.0.0-dev.7)
+
+Each field of the served configuration carries `automates`, and an automation-enabling field carries
+`automationAuthor`, the account recorded as having switched it on. Pins `Api.Contracts` 1.0.0-dev.16,
+which holds both fields.
+
 ### Added — who switched an automation on (ComponentSurface 1.0.0-dev.10, ComponentSurface.Http 1.0.0-dev.6)
 
 - **`ComponentAutomationAuthors`** records the account that set each `[Automates]` setting, in an

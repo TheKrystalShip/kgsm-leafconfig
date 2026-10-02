@@ -44,6 +44,8 @@ public sealed class ComponentConfigService(
 
         IReadOnlyDictionary<string, string> over = overrides.Read();
         ComponentFloor floor = floors.Read(descriptor.FloorSources);
+        IReadOnlyDictionary<string, AutomationAuthor> recorded =
+            authors?.Read() ?? new Dictionary<string, AutomationAuthor>(StringComparer.Ordinal);
 
         var fields = new List<ComponentConfigField>(descriptor.Fields.Count);
         foreach (ComponentFieldDef f in descriptor.Fields)
@@ -91,7 +93,11 @@ public sealed class ComponentConfigService(
                 Min: f.Min,
                 Max: f.Max,
                 PairedApiKey: f.PairedApiKey,
-                DependsOn: f.DependsOn));
+                DependsOn: f.DependsOn,
+                Automates: f.Automates,
+                AutomationAuthor: f.Automates && recorded.TryGetValue(f.Key, out AutomationAuthor? author)
+                    ? author.Author
+                    : null));
         }
 
         // A component may declare its own surface read-only — the panel API does, because applying a

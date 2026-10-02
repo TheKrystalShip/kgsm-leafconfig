@@ -24,6 +24,39 @@ public class AutomationAuthorsTests : IDisposable
             NullLogger<ComponentAutomationAuthors>.Instance);
 
     [Fact]
+    public void The_config_view_names_who_switched_an_automation_on()
+    {
+        File.WriteAllText(Path.Combine(_dir, "desc.json"), """
+            {
+              "schemaVersion": 1, "id": "sample", "displayName": "Sample", "unit": "sample.service",
+              "role": "A sample.", "onDemand": false, "applyMode": "restart", "floorSources": [],
+              "fields": [
+                { "key": "mode", "env": "Sample__Mode", "label": "Mode", "description": "Runs on its own.",
+                  "type": "bool", "default": "false", "automates": true },
+                { "key": "port", "env": "Sample__Port", "label": "Port", "description": "Where it listens.",
+                  "type": "int", "default": "8080" }
+              ]
+            }
+            """);
+        var options = new ComponentSurfaceOptions(Path.Combine(_dir, "desc.json"), Path.Combine(_dir, "overrides.env"));
+        var service = new ComponentConfigService(
+            new ComponentDescriptorStore(options, NullLogger<ComponentDescriptorStore>.Instance),
+            new ComponentOverrideStore(options, NullLogger<ComponentOverrideStore>.Instance),
+            new ComponentFloorReader(options, NullLogger<ComponentFloorReader>.Instance),
+            new ComponentUnitControl(options, NullLogger<ComponentUnitControl>.Instance),
+            NullLogger<ComponentConfigService>.Instance,
+            Authors());
+
+        Authors().Record(["mode"], [], "usr_alice", Now);
+
+        var fields = service.Read()!.Fields.ToDictionary(f => f.Key);
+        Assert.True(fields["mode"].Automates);
+        Assert.Equal("usr_alice", fields["mode"].AutomationAuthor);
+        Assert.False(fields["port"].Automates);
+        Assert.Null(fields["port"].AutomationAuthor);
+    }
+
+    [Fact]
     public void Setting_a_key_records_its_author_and_a_later_setter_replaces_them()
     {
         ComponentAutomationAuthors authors = Authors();
