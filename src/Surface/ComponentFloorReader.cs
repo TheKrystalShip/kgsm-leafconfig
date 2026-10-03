@@ -16,7 +16,7 @@ public sealed record ComponentFloor(IReadOnlyDictionary<string, string> Values, 
 
 /// <summary>
 /// What this host's deploy files set, before any override — the tier between the coded default and
-/// what an administrator has changed.
+/// what has been changed through the panel.
 /// </summary>
 /// <remarks>
 /// <para>

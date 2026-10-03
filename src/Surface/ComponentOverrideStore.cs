@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace TheKrystalShip.KGSM.ComponentSurface;
 
 /// <summary>
-/// The overrides an administrator has set through the Control Panel, and the file that delivers them
+/// The overrides set through the Control Panel, and the file that delivers them
 /// back to this component.
 /// </summary>
 /// <remarks>
@@ -85,7 +85,7 @@ public sealed class ComponentOverrideStore(ComponentSurfaceOptions options, ILog
         if (dir is not null && !Directory.Exists(dir))
         {
             // The permission bits are the point of creating it here rather than letting the write do it:
-            // this holds whatever an administrator typed, and a descriptor may declare a secret.
+            // this holds whatever somebody typed, and a descriptor may declare a secret.
             if (OperatingSystem.IsLinux())
                 Directory.CreateDirectory(dir, Dir0700);
             else

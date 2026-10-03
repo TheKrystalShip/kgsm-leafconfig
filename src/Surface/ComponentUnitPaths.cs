@@ -5,7 +5,7 @@ namespace TheKrystalShip.KGSM.ComponentSurface;
 /// </summary>
 /// <remarks>
 /// <para><b>systemd reads several roots, and so must anything reasoning about a unit.</b> A unit
-/// installed by a package lives in <c>/usr/lib/systemd/system</c>; one an administrator wrote or a
+/// installed by a package lives in <c>/usr/lib/systemd/system</c>; one written by hand or a
 /// deploy script placed lives in <c>/etc/systemd/system</c>; a generator's lives under
 /// <c>/run/systemd/system</c>. Searching one of them answers correctly for hosts provisioned that one
 /// way and wrongly for every other, which is the difference between a configuration page and a page
@@ -40,8 +40,8 @@ public static class ComponentUnitPaths
         string.IsNullOrWhiteSpace(configuredDir) ? StandardRoots : [configuredDir.Trim()];
 
     /// <summary>
-    /// The unit file systemd would read, or null when no root carries one. The first root wins, so an
-    /// administrator's copy shadows the packaged one exactly as systemd has it.
+    /// The unit file systemd would read, or null when no root carries one. The first root wins, so a
+    /// hand-placed copy shadows the packaged one exactly as systemd has it.
     /// </summary>
     /// <remarks>
     /// An absolute path is returned as itself when it is there, for a component whose unit lives
