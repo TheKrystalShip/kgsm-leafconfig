@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — released (ComponentConfig 3.2.0, ComponentSurface 1.0.0, ComponentSurface.Http 1.0.0)
+
+The three packages are released as they stand: the generator that writes action manifests, and the
+surface that carries each automation's author. `ComponentSurface` pins `Api.Contracts` 1.0.0. No
+behaviour changes.
+
 ### Added — the config view says who switched each automation on (ComponentSurface 1.0.0-dev.11, ComponentSurface.Http 1.0.0-dev.7)
 
 Each field of the served configuration carries `automates`, and an automation-enabling field carries
